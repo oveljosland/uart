@@ -8,7 +8,7 @@ entity urx is
 	generic (
 		constant BITWIDTH: positive := 8;
 		constant SYS_CLK_FRQ: positive := 50; /* MHz */
-		constant BAUD_RATE: positive := 9600; /* B/s */
+		constant BAUD_RATE: positive := 9600 /* B/s */
 	);
 	port (
 		sclk: in std_logic; /* system clock */
@@ -19,9 +19,9 @@ entity urx is
 end entity;
 
 architecture rtl of urx is
-	constant N: positive := SYS_CLK_FRQ / BAUD_RATE;
+	constant N: positive := SYS_CLK_FRQ*10e6 / BAUD_RATE;
 
-	type state is (idle, startbit, databit, stopbit, flush);
+	type state is (idle, startbit, databit);
 	signal s: state := idle;
 
 	signal d: std_logic := '0'; /* rx serial data in */
@@ -43,9 +43,13 @@ begin
 		if rising_edge(sclk) then
 			case s is
 				when idle =>
-					d <= '0';
 					cnt <= 0;
 					idx <= 0;
+					if (d = '0') then
+						s <= startbit;
+					else
+						s <= idle;
+					end if;
 				when startbit =>
 					if cnt = (N - 1) / 2 then
 						if d = '0' then
@@ -56,20 +60,21 @@ begin
 						end if;
 					else
 						cnt <= cnt + 1;
-						s <= startbit;
+						s <= startbit; --lowkey denne linjen gjør ingenting
 					end if;
 
 				when databit =>
 					if cnt < N - 1 then
 						cnt <= cnt + 1;
-						s <= databit;
+						s <= databit; --lowkey denne linjen gjør ingenting
 					else
 						cnt <= 0;
-						b <=
-				when stopbit =>
-					-- pass
-				when flush =>
-					-- pass
+						b(idx) <= d;
+						idx <= idx + 1;
+						if idx = BITWIDTH - 1 then
+							s <= idle;
+						end if;
+					end if;
 			end case;
 		end if;
 	end process;
