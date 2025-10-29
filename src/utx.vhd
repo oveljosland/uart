@@ -11,7 +11,7 @@
 -- should be able to change baud rate when running.
 
 library work;
-use work.uart_pkg.all;
+use work.pkg.all;
 
 entity utx is
 	port (
