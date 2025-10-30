@@ -10,3 +10,23 @@
 
 entity ctr is
 end entity;
+
+architecture rtl of ctr is
+begin
+	/* get:  get character from rx register */
+	pure function getc() return integer is
+	begin
+		
+	end function;
+
+	pure function putc(c: integer) return integer is
+	begin
+	end function;
+
+	/* putback:  get character from rx and put intro rx */
+	pure function putback() return integer is
+	begin
+		putc(getc());
+	end function;
+
+end architecture;
