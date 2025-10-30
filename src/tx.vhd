@@ -21,7 +21,6 @@ entity utx is
 	port (
 		clk: in std_logic; /* system clock */
 		bi: in std_logic_vector(BITWIDTH-1 downto 0); /* byte in */
-		dv: in std_logic; /* data valid */
 		bs: out std_logic; /* busy */
 		so: out std_logic /* serial out */
 	);
@@ -29,7 +28,6 @@ end entity;
 
 architecture rtl of utx is
 	signal s: state := idle;
-
 	signal d: std_logic := '1'; /* serial data out, active low */
 
 

@@ -6,29 +6,24 @@ library work;
 use work.pkg.all;
 
 entity top is
-	port (
+	port ( /* TODO: decide which ports to consider */
 		sclk: in std_logic; /* system clock */
 		rstn: in std_logic; /* active low */
 
-		rx: in std_logic;
+		rx: in std_logic; 
 		tx: out std_logic;
-
-		valid: out std_logic; /* rx data valid */
-		busy: out std_logic /* tx busy */
 	);
 end entity;
 
 architecture rtl of top is
+	signal rx_dv: std_logic;
+	signal tx_dv: std_logic;
 begin
-	/*
-	tx_module: entity work.utx
+	rx_module: entity work.rx
 	port map (
-		-- TODO: map signals
+		clk => sclk, /* TODO: replace sclk with baud clock */
 	);
-
-	rx_module: entity work.urx
-	port map (
-		-- TODO: map signals
-	);
-	*/
+	
+	/* loopback */
+	-- tx data <= rx data
 end architecture;
