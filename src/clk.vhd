@@ -1,5 +1,9 @@
 /* baud rate clock generator */
 
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 library work;
 use work.pkg.all;
 
@@ -21,7 +25,7 @@ begin
 		if rstn = '0' then
 			cnt <= 0;
 			reg <= '0';
-		elsif rising_edge(clk) then
+		elsif rising_edge(sclk) then
 			if cnt = MAX - 1 then
 				cnt <= 0;
 				reg <= not reg;

@@ -16,6 +16,10 @@
 
 /* TODO: non-critical: implement fifo, parity. */
 
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 library work;
 use work.pkg.all;
 
@@ -24,12 +28,12 @@ entity urx is
 		clk: in std_logic; /* system clock */
 		si: in std_logic; /* serial in */
 		dv: out std_logic; /* data valid */
-		bo: out std_logic /* byte out */
+		bo: out std_logic_vector(BITWIDTH-1 downto 0) /* byte out */
 	);
 end entity;
 
 architecture rtl of urx is
-	constant NSAMP: positive := 8; /* oversampling */
+	
 	constant NVOTE: positive := 5;
 	signal s: state := idle;
 	signal d: std_logic := '0'; /* rx serial data in */

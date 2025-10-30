@@ -8,25 +8,34 @@
 -- can send a predetermined string of at least eight characters.
 -- can adjust baud rate while running (100 kb/s – 1 Mb/s in 100 kb/s steps).
 
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+library work;
+use work.pkg.all;
+
 entity ctr is
 end entity;
 
 architecture rtl of ctr is
 begin
-	/* get:  get character from rx register */
+	/*
 	pure function getc() return integer is
 	begin
-		
+		return 0;
 	end function;
 
 	pure function putc(c: integer) return integer is
 	begin
+		return 0;
 	end function;
 
-	/* putback:  get character from rx and put intro rx */
 	pure function putback() return integer is
 	begin
 		putc(getc());
+		return 0;
 	end function;
+	*/
 
 end architecture;

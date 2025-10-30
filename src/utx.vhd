@@ -10,6 +10,10 @@
 -- should support parity control (even, odd, none).
 -- should be able to change baud rate when running.
 
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 library work;
 use work.pkg.all;
 
@@ -19,21 +23,22 @@ entity utx is
 		bi: in std_logic_vector(BITWIDTH-1 downto 0); /* byte in */
 		dv: in std_logic; /* data valid */
 		bs: out std_logic; /* busy */
-		so: out std_logic; /* serial out */
+		so: out std_logic /* serial out */
 	);
 end entity;
 
 architecture rtl of utx is
-	signal s: state_t := idle;
+	signal s: state := idle;
 
 	signal d: std_logic := '1'; /* serial data out, active low */
 
 
 begin
 	so <= d; /* put bit */
-
-	main: process(clk) begin
-		if rising_edge(clk) then
-			bs <= '0' when s = idle else '1';
+	
+	/* TODO: fix syntax errors */
+	--main: process(clk) begin
+		--if rising_edge(clk) then
+			--bs <= '0' when s = idle else '1'; /* TODO: there is a syntax error here */
 
 end architecture;
