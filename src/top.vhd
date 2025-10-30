@@ -20,4 +20,13 @@ end entity;
 
 architecture rtl of top is
 begin
+	tx_module: entity work.utx
+	port map (
+		/* TODO: map signals */
+	);
+
+	rx_module: entity work.urx
+	port map (
+		/* TODO: map signals */
+	);
 end architecture;
