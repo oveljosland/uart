@@ -17,3 +17,7 @@ entity top is
 		busy: out std_logic /* tx busy */
 	);
 end entity;
+
+architecture rtl of top is
+begin
+end architecture;
