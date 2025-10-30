@@ -38,9 +38,11 @@ architecture rtl of urx is
 	signal s: state := idle;
 	signal d: std_logic := '0'; /* rx serial data in */
 	signal b: std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0');/*byte out*/
-	signal votes: natural range 0 to NVOTE := 0; /* ones in voting window */
-	signal samps: natural range 0 to CLK_PER_SMP - 1 := 0;
-	signal idx: natural range 0 to BITWIDTH - 1 := 0;
+	
+	
+	signal i: natural range 0 to BITWIDTH - 1 := 0; /* bit index */
+	signal j: natural range 0 to CLK_PER_SMP - 1 := 0; /* count samples */
+	signal k: natural range 0 to NVOTE := 0; /* ones in voting window */
 begin
 	/* read:  read rx serial data into rx data register */
 	read: process(clk) begin
@@ -55,54 +57,54 @@ begin
 			dv <= '0'; /* default */
 			case s is
 				when idle =>
-					samps <= 0;
-					idx <= 0;
-					votes <= 0;
+					i <= 0;
+					j <= 0;
+					k <= 0;
 					if d = '0' then
 						s <= startbit;
 					end if;
 
 				when startbit =>
-					if samps < CLK_PER_SMP - 1 then
-						samps <= samps + 1;
+					if j < CLK_PER_SMP - 1 then
+						j <= j + 1;
 					else
-						samps <= 0;
-						if idx < NSAMP - 1 then
-							idx <= idx + 1;
-							if idx = NSAMP/2 and d = '1' then /* false start */
+						j <= 0;
+						if i < NSAMP - 1 then
+							i <= i + 1;
+							if i = NSAMP/2 and d = '1' then /* false start */
 								s <= idle;
 							end if;
 						else
-							idx <= 0;
-							votes <= 0;
+							i <= 0;
+							k <= 0;
 							s <= databit;
 						end if;
 					end if;
-
+				
 				when databit =>
-					if samps < CLK_PER_SMP - 1 then
-						samps <= samps + 1;
+					if j < CLK_PER_SMP - 1 then
+						j <= j + 1;
 						/* count ones in voting window */
-						if idx >= (NSAMP / 2 - NVOTE / 2)
-						and idx <= (NSAMP / 2 + NVOTE / 2) then
+						if i >= (NSAMP / 2 - NVOTE / 2)
+						and i <= (NSAMP / 2 + NVOTE / 2) then
 							if d = '1' then
-								votes <= votes + 1;
+								k <= k + 1;
 							end if;
 						end if;
 					else
-						samps <= 0;
-						if idx < NSAMP - 1 then
-							idx <= idx + 1;
+						j <= 0;
+						if i < NSAMP - 1 then
+							i <= i + 1;
 						else
 							/* end of bit period */
-							if votes >= NVOTE/2 then /* voting time */
+							if k >= NVOTE/2 then /* voting time */
 								b <= b(BITWIDTH - 2 downto 0) & '1';
 							else
 								b <= b(BITWIDTH - 2 downto 0) & '0';
 							end if;
-							idx <= 0;
-							votes <= 0;
-							if idx < BITWIDTH - 1 then
+							i <= 0;
+							k <= 0;
+							if i < BITWIDTH - 1 then
 								s <= databit;
 							else
 								s <= stopbit;
@@ -111,13 +113,13 @@ begin
 					end if;
 
 				when stopbit =>
-					if samps < CLK_PER_SMP - 1 then
-						samps <= samps + 1;
+					if j < CLK_PER_SMP - 1 then
+						j <= j + 1;
 					else
-						samps <= 0;
-						if idx < NSAMP - 1 then
-							idx <= idx + 1;
-							if idx = NSAMP / 2 and d = '0' then /* false stop */
+						j <= 0;
+						if i < NSAMP - 1 then
+							i <= i + 1;
+							if i = NSAMP / 2 and d = '0' then /* false stop */
 								s <= idle;
 							end if;
 						else
