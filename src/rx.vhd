@@ -69,9 +69,9 @@ begin
 						j <= j + 1;
 					else
 						j <= 0;
-						if i < NSAMP - 1 then
+						if i < SMP_PER_BIT - 1 then
 							i <= i + 1;
-							if i = NSAMP/2 and d = '1' then /* false start */
+							if i = SMP_PER_BIT/2 and d = '1' then /* false start */
 								s <= idle;
 							end if;
 						else
@@ -85,15 +85,15 @@ begin
 					if j < CLK_PER_SMP - 1 then
 						j <= j + 1;
 						/* count ones in voting window */
-						if i >= (NSAMP / 2 - NVOTE / 2)
-						and i <= (NSAMP / 2 + NVOTE / 2) then
+						if i >= (SMP_PER_BIT / 2 - NVOTE / 2)
+						and i <= (SMP_PER_BIT / 2 + NVOTE / 2) then
 							if d = '1' then
 								k <= k + 1;
 							end if;
 						end if;
 					else
 						j <= 0;
-						if i < NSAMP - 1 then
+						if i < SMP_PER_BIT - 1 then
 							i <= i + 1;
 						else
 							/* end of bit period */
@@ -117,9 +117,9 @@ begin
 						j <= j + 1;
 					else
 						j <= 0;
-						if i < NSAMP - 1 then
+						if i < SMP_PER_BIT - 1 then
 							i <= i + 1;
-							if i = NSAMP / 2 and d = '0' then /* false stop */
+							if i = SMP_PER_BIT / 2 and d = '0' then /* false stop */
 								s <= idle;
 							end if;
 						else
