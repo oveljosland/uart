@@ -23,47 +23,49 @@ use ieee.numeric_std.all;
 library work;
 use work.pkg.all;
 
-entity urx is
+entity rx is
 	port (
-		clk: in std_logic; /* system clock */
-		si: in std_logic; /* serial in */
-		dv: out std_logic; /* data valid */
-		bo: out std_logic_vector(BITWIDTH-1 downto 0) /* byte out */
+		clk: in std_logic;
+		serial_in: in std_logic;
+		data_valid: out std_logic;
+		byte_out: out std_logic_vector(BITWIDTH - 1 downto 0)
 	);
 end entity;
 
-architecture rtl of urx is
+architecture rtl of rx is
 	
-	constant NVOTE: positive := 5;
+	constant MVOTES: positive := 5;
+
 	signal s: state := idle;
-	signal d: std_logic := '0'; /* rx serial data in */
-	signal b: std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0');/*byte out*/
-	
-	
-	signal i: natural range 0 to BITWIDTH - 1 := 0; /* bit index */
-	signal j: natural range 0 to CLK_PER_SMP - 1 := 0; /* count samples */
-	signal k: natural range 0 to NVOTE := 0; /* ones in voting window */
+	signal data: std_logic := '0';
+	signal char: std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0');
+
+	signal i: natural range 0 to BITWIDTH - 1 := 0;		/* bit index counter */
+	signal j: natural range 0 to SMP_PER_BIT - 1 := 0; /* oversample counter */
+	signal k: natural range 0 to MVOTES - 1 := 0;	/* majority vote counter */
 begin
 	/* read:  read rx serial data into rx data register */
 	read: process(clk) begin
 		if rising_edge(clk) then
-			d <= si;
+			data <= serial_in;
 		end if;
 	end process;
 
-	/* main:  receiver state machine */
-	main: process(clk) begin
+	/* control:  control receiver states */
+	control: process(clk) begin
 		if rising_edge(clk) then
-			dv <= '0'; /* default */
+			data_valid <= '0'; /* default */
 			case s is
+				/* idle:  wait for transmission */
 				when idle =>
 					i <= 0;
 					j <= 0;
 					k <= 0;
-					if d = '0' then
+					if data = '0' then
 						s <= startbit;
 					end if;
-
+				
+				/* startbit:  */
 				when startbit =>
 					if j < CLK_PER_SMP - 1 then
 						j <= j + 1;
@@ -71,8 +73,8 @@ begin
 						j <= 0;
 						if i < SMP_PER_BIT - 1 then
 							i <= i + 1;
-							if i = SMP_PER_BIT/2 and d = '1' then /* false start */
-								s <= idle;
+							if i = SMP_PER_BIT / 2 and data = '1' then
+								s <= idle; /* false start */
 							end if;
 						else
 							i <= 0;
@@ -81,13 +83,14 @@ begin
 						end if;
 					end if;
 				
+				/* databit:  */
 				when databit =>
 					if j < CLK_PER_SMP - 1 then
 						j <= j + 1;
 						/* count ones in voting window */
-						if i >= (SMP_PER_BIT / 2 - NVOTE / 2)
-						and i <= (SMP_PER_BIT / 2 + NVOTE / 2) then
-							if d = '1' then
+						if i >= (SMP_PER_BIT / 2 - MVOTES / 2)
+						and i <= (SMP_PER_BIT / 2 + MVOTES / 2) then
+							if data = '1' then
 								k <= k + 1;
 							end if;
 						end if;
@@ -97,10 +100,10 @@ begin
 							i <= i + 1;
 						else
 							/* end of bit period */
-							if k >= NVOTE/2 then /* voting time */
-								b <= b(BITWIDTH - 2 downto 0) & '1';
+							if k >= MVOTES/2 then /* voting time */
+								char <= char(BITWIDTH - 2 downto 0) & '1';
 							else
-								b <= b(BITWIDTH - 2 downto 0) & '0';
+								char <= char(BITWIDTH - 2 downto 0) & '0';
 							end if;
 							i <= 0;
 							k <= 0;
@@ -111,7 +114,8 @@ begin
 							end if;
 						end if;
 					end if;
-
+				
+				/* stopbit:  */
 				when stopbit =>
 					if j < CLK_PER_SMP - 1 then
 						j <= j + 1;
@@ -119,15 +123,17 @@ begin
 						j <= 0;
 						if i < SMP_PER_BIT - 1 then
 							i <= i + 1;
-							if i = SMP_PER_BIT / 2 and d = '0' then /* false stop */
+							if i = SMP_PER_BIT / 2 and data = '0' then /* false stop */
 								s <= idle;
 							end if;
 						else
-							bo <= b;  /* put byte */
-							dv <= '1';
+							byte_out <= char;  /* put char */
+							data_valid <= '1';
 							s <= idle;
 						end if;
 					end if;
+				
+				/* flush:  clean and return to idle */
 				when flush =>
 					s <= idle;
 			end case;
