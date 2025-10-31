@@ -11,7 +11,7 @@ entity top is
 		rstn: in std_logic; /* active low */
 
 		rx: in std_logic; 
-		tx: out std_logic;
+		tx: out std_logic
 	);
 end entity;
 
@@ -19,10 +19,7 @@ architecture rtl of top is
 	signal rx_dv: std_logic;
 	signal tx_dv: std_logic;
 begin
-	rx_module: entity work.rx
-	port map (
-		clk => sclk, /* TODO: replace sclk with baud clock */
-	);
+	--rx_module: entity work.rx
 	
 	/* loopback */
 	-- tx data <= rx data
