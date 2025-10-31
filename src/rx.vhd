@@ -10,11 +10,12 @@
 --x bit period to determine the value.
 --x must indicate when data is received and ready to be used (data valid).
 --x can do majority decision based on 5 samples in the middle of the bit period.
--- can have a 16 byte FIFO to store bytes, delete new data when full.
+-- can have a 16 byte FIFO to store bytes, delete new data when ff_full.
 -- should support parity control (even, odd, none).
 -- should be able to change baud rate when running.
 
 /* TODO: non-critical: implement parity. */
+/* TODO: connect fifo to rx logic */
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -43,7 +44,38 @@ architecture rtl of rx is
 	signal i: natural range 0 to BITWIDTH - 1 := 0;		/* bit index counter */
 	signal j: natural range 0 to SMP_PER_BIT - 1 := 0; /* oversample counter */
 	signal k: natural range 0 to MVOTES - 1 := 0;	/* majority vote counter */
+
+	component fifo
+	port (
+		clk: in std_logic;
+		rst: in std_logic;
+		r: in std_logic;
+		w: in std_logic;
+		data_in: in std_logic_vector(BITWIDTH - 1 downto 0);
+		data_out: out std_logic_vector(BITWIDTH - 1 downto 0);
+		empty, full: out std_logic
+	);
+	end component;
+
+	signal ff_din: std_logic_vector(BITWIDTH - 1 downto 0);
+	signal ff_dout: std_logic_vector(BITWIDTH - 1 downto 0);
+	signal ff_w_en: std_logic;
+	signal ff_r_en: std_logic;
+	signal ff_empty: std_logic;
+	signal ff_full: std_logic;
 begin
+	rx_fifo: fifo
+		port map (
+			clk => clk,
+			rst => '1', /* TODO: rx.vhd does not have a reset signal yet */
+			data_in => ff_din,
+			data_out => ff_dout,
+			w => ff_w_en,
+			r => ff_r_en,
+			empty => ff_empty,
+			full => ff_full
+		);
+	
 	/* read:  read rx serial data into rx data register */
 	read: process(clk) begin
 		if rising_edge(clk) then
