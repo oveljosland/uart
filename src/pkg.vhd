@@ -8,7 +8,7 @@ package pkg is
 	constant SMP_PER_BIT: positive := 8; /* oversamples per bit */
 	constant SYS_CLK_FRQ: positive := 50; /* MHz */
 	constant CLK_PER_BIT: positive := SYS_CLK_FRQ * 1000000 / BAUDRATE;
-	constant CLK_PER_SMP: positive := CLK_PER_BIT / NSAMP; /* cycles/sample */
+	constant CLK_PER_SMP: positive := CLK_PER_BIT / SMP_PER_BIT;
 	
 	type state is (idle, startbit, databit, stopbit, flush);
 
