@@ -140,3 +140,15 @@ begin
 		end if;
 	end process;
 end architecture;
+
+entity fifo is
+	port (
+		clk: in std_logic;
+		rst: in std_logic;
+		r: in std_logic;
+		w: in std_logic;
+		data_in: in std_logic_vector(BITWIDTH - 1 downto 0);
+		data_out: out std_logic_vector(BITWIDTH - 1 downto 0);
+		empty, full: out std_logic
+	);
+end entity;
