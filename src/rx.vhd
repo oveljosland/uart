@@ -152,3 +152,11 @@ entity fifo is
 		empty, full: out std_logic
 	);
 end entity;
+
+architecture rtl of fifo is
+	type memory is array (0 to 15) of std_logic_vector(BITWIDTH - 1 downto 0);
+	signal mem: memory;
+	signal wp, rp: integer := 0;
+	signal i: integer := 0;
+begin
+end architecture;
