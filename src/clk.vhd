@@ -39,5 +39,6 @@ begin
 			end if;
 		end if;
 	end process;
+	/* TODO: check if this need to be inside a process */
 	gclk <= reg;
 end architecture;
