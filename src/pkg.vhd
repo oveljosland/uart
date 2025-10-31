@@ -11,4 +11,10 @@ package pkg is
 	constant CLK_PER_SMP: positive := CLK_PER_BIT / NSAMP; /* cycles/sample */
 	
 	type state is (idle, startbit, databit, stopbit, flush);
+
+	type list is array (integer range <>) of integer;
+	constant SUPPORTED_BAUDRATES: list := (
+		9600, 19200, 38400, 57600, 115200
+	);
+
 end package;
