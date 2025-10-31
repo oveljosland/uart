@@ -17,9 +17,9 @@ entity fifo is
 	);
 end entity;
 
-/* TODO: finish fifo implementation, use 'empty' and 'full' */
 architecture rtl of fifo is
-	constant DEPTH: positive := 16 * BITWIDTH;
+	constant NBITS: positive := 7;
+	constant DEPTH: positive := 2**NBITS;
 	type mem_t is array (0 to DEPTH-1) of std_logic_vector(BITWIDTH-1 downto 0);
 	signal mem: mem_t;
 	signal rp, wp: integer := 0;
@@ -40,6 +40,22 @@ begin
 				data_out <= mem(rp);
 				rp <= (rp + 1) mod DEPTH;
 				i <= i - 1;
+			end if;
+		end if;
+	end process;
+
+	process(clk) begin
+		if rising_edge(clk) then
+			if i = 0 then
+				empty <= '1';
+			else
+				empty <= '0';
+			end if;
+			
+			if i = DEPTH then
+				full <= '1';
+			else
+				full <= '0';
 			end if;
 		end if;
 	end process;
