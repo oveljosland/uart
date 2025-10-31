@@ -14,7 +14,7 @@
 -- should support parity control (even, odd, none).
 -- should be able to change baud rate when running.
 
-/* TODO: non-critical: implement fifo, parity. */
+/* TODO: non-critical: implement parity. */
 
 library ieee;
 use ieee.std_logic_1164.all;

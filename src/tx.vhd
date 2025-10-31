@@ -19,24 +19,14 @@ use work.pkg.all;
 
 entity utx is
 	port (
-		clk: in std_logic; /* system clock */
-		bi: in std_logic_vector(BITWIDTH-1 downto 0); /* byte in */
-		bs: out std_logic; /* busy */
-		so: out std_logic /* serial out */
+		clk: in std_logic;
+		char_in: in std_logic_vector(BITWIDTH-1 downto 0);
+		busy: out std_logic;
+		serial_out: out std_logic
 	);
 end entity;
 
 architecture rtl of utx is
 	signal s: state := idle;
-	signal d: std_logic := '1'; /* serial data out, active low */
-
-
 begin
-	so <= d; /* put bit */
-	
-	/* TODO: fix syntax errors */
-	--main: process(clk) begin
-		--if rising_edge(clk) then
-			--bs <= '0' when s = idle else '1'; /* TODO: there is a syntax error here */
-
 end architecture;

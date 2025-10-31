@@ -20,22 +20,4 @@ end entity;
 
 architecture rtl of ctr is
 begin
-	/*
-	pure function getc() return integer is
-	begin
-		return 0;
-	end function;
-
-	pure function putc(c: integer) return integer is
-	begin
-		return 0;
-	end function;
-
-	pure function putback() return integer is
-	begin
-		putc(getc());
-		return 0;
-	end function;
-	*/
-
 end architecture;
