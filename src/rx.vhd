@@ -26,6 +26,7 @@ use work.pkg.all;
 entity rx is
 	port (
 		clk: in std_logic;
+		rst: in std_logic;
 		serial_in: in std_logic;
 		data_valid: out std_logic;
 		byte_out: out std_logic_vector(BITWIDTH - 1 downto 0)
@@ -54,7 +55,9 @@ begin
 
 	/* control:  control receiver states */
 	control: process(clk) begin
-		if rising_edge(clk) then
+		if rst = RST then
+			s <= flush;
+		elsif rising_edge(clk) then
 			data_valid <= '0'; /* default */
 			case s is
 				when idle => /* reset counters */
@@ -146,6 +149,10 @@ begin
 
 				/* flush:  clean and return to idle */
 				when flush =>
+					clk_cnt <= 0;
+					smp_idx <= 0;
+					bit_idx <= 0;
+					votecnt <= 0;
 					s <= idle;
 			end case;
 		end if;

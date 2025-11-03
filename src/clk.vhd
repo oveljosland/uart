@@ -8,7 +8,7 @@ use work.pkg.all;
 entity baud_clock is
 	port (
 		clk: in std_logic;
-		rstn: in std_logic;
+		rst: in std_logic;
 		baud_tick: out std_logic
 	);
 end entity;
@@ -19,8 +19,8 @@ architecture rtl of baud_clock is
 	signal clk_out: std_logic := '0';
 begin
 	/* gen:  generate baud rate clock */
-	gen: process(clk, rstn) begin
-		if rstn = '0' then
+	gen: process(clk, rst) begin
+		if rst = RST then
 			i <= 0;
 			clk_out <= '0';
 		elsif rising_edge(clk) then

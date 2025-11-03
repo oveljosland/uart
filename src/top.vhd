@@ -8,7 +8,7 @@ use work.pkg.all;
 entity top is
 	port ( /* TODO: decide which ports to consider */
 		clk: in std_logic; /* SYS_CLK_FRQ defined in pkg */
-		rstn: in std_logic;
+		rst: in std_logic; /* RST defined in pkg */
 
 		rx: in std_logic; 
 		tx: out std_logic
@@ -34,13 +34,14 @@ begin
 	baud_clock: entity work.baud_clock
 		port map (
 			clk => clk,
-			rstn => rstn,
+			rst => rst,
 			baud_tick => baud_tick
 		);
 
 	rx_module: entity work.rx
 		port map (
 			clk => clk,
+			rst => rst,
 			serial_in => rx,
 			data_valid => rx_dv,
 			byte_out => rx_dout
@@ -49,7 +50,7 @@ begin
 	rx_fifo: entity work.fifo
 		port map (
 			clk => clk,
-			rst => rstn,
+			rst => rst,
 			r => ff_read,
 			w => rx_dv,
 			din => rx_dout,
