@@ -133,7 +133,6 @@ begin
 						clk_cnt <= 0;
 						if smp_idx < SMP_PER_BIT - 1 then
 							smp_idx <= smp_idx + 1;
-							-- false stop detection (line low at middle)
 							if smp_idx = SMP_PER_BIT / 2 and din = '0' then
 								s <= idle; /* false stop: middle sample low */
 							end if;
@@ -144,7 +143,7 @@ begin
 							s <= idle;
 						end if;
 					end if;
-				
+
 				/* flush:  clean and return to idle */
 				when flush =>
 					s <= idle;

@@ -40,7 +40,7 @@ begin
 
 	rx_module: entity work.rx
 		port map (
-			clk => baud_tick,
+			clk => clk,
 			serial_in => rx,
 			data_valid => rx_dv,
 			byte_out => rx_dout
