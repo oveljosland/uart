@@ -18,4 +18,13 @@ package pkg is
 		9600, 19200, 38400, 57600, 115200
 	);
 
+	/* parity:  return parity of bit vector */
+	function parity(x: std_logic_vector) return std_logic is
+		variable tmp: std_logic := '0';
+	begin
+		for i in range x'RANGE loop
+			tmp := tmp xor x(i);
+		end loop;
+		return tmp;
+	end function;
 end package;

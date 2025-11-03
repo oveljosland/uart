@@ -10,7 +10,7 @@
 --x bit period to determine the value.
 --x must indicate when din is received and ready to be used (din valid).
 --x can do majority decision based on 5 samples in the middle of the bit period.
--- can have a 16 byte FIFO to store bytes, delete new din when ff_full.
+--x can have a 16 byte FIFO to store bytes, delete new din when ff_full.
 -- should support parity control (even, odd, none).
 -- should be able to change baud rate when running.
 
@@ -57,7 +57,7 @@ begin
 
 	/* count_votes:  count ones inside voting window */
 	function count_votes(din: std_logic, idx: natural) return natural is
-		signal cnt: natural := 0;
+		variable cnt: natural := 0;
 	begin
 		/*
 		 * count inside centered -MAJVOTES/2..+MAJVOTES/2 window 
