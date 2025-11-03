@@ -13,7 +13,7 @@ entity top is
 		rx: in std_logic; 
 		tx: out std_logic;
 
-		seg : out std_logic_vector(6 downto 0)
+		HEX0: out std_logic_vector(6 downto 0)
 	);
 end entity;
 
@@ -32,6 +32,10 @@ architecture rtl of top is
 	signal ff_dout: std_logic_vector(BITWIDTH - 1 downto 0);
 	signal ff_read, ff_write: std_logic; /* r/w enable */
 	signal ff_empty, ff_full: std_logic; /* stauts flags */
+
+	/* test */
+	signal test: std_logic_vector(BITWIDTH - 1 downto 0);
+
 begin
 	baud_clock: entity work.baud_clock
 		port map (
@@ -63,7 +67,8 @@ begin
 		);
 	display: entity work.display
 		port map (
-			char => rx_dout,
-			seg => seg
+			char => rx_dout, -- set this to ff_dout later
+			seg => HEX0
 		);
+	
 end architecture;
