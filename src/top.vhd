@@ -11,7 +11,9 @@ entity top is
 		rst: in std_logic; /* RST defined in pkg */
 
 		rx: in std_logic; 
-		tx: out std_logic
+		tx: out std_logic;
+
+		seg : out std_logic_vector(6 downto 0)
 	);
 end entity;
 
@@ -58,5 +60,10 @@ begin
 			dout => ff_dout,
 			empty => ff_empty,
 			full => ff_full
+		);
+	display: entity work.display
+		port map (
+			char => rx_dout,
+			seg => seg
 		);
 end architecture;
