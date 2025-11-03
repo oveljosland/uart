@@ -13,7 +13,9 @@ entity top is
 		rx: in std_logic; 
 		tx: out std_logic;
 
-		HEX0: out std_logic_vector(6 downto 0)
+		HEX0: out std_logic_vector(6 downto 0);
+		HEX1: out std_logic_vector(6 downto 0);
+		HEX2: out std_logic_vector(6 downto 0)
 	);
 end entity;
 
@@ -93,6 +95,120 @@ begin
 				d := 0;
 			else
 				d := d +1;
+			end if;
+		end if;
+	end process;
+
+	anim1: process(clk, rst)
+		constant SPEED: positive := 5_000_000;
+		constant STEPS: positive := 8;
+		type list2 is array(0 to STEPS - 1) of std_logic_vector(6 downto 0);
+		constant pattern: list2 := (
+			"1111110",
+			"1111101",
+			"0111111",
+			"1101111",
+			"1110111",
+			"1111011",
+			"0111111",
+			"1011111"
+		);
+		variable cnt: integer := 0;
+		variable i: integer := 0;
+	begin
+		if rst = '0' then
+			i := 0;
+			cnt := 0;
+			HEX1 <= (others => '1');
+		elsif rising_edge(clk) then
+			if cnt = SPEED then
+				i := (i + 1) mod STEPS;
+				HEX1 <= pattern(i);
+				cnt := 0;
+			else
+				cnt := cnt + 1;
+			end if;
+		end if;
+	end process;
+
+	anim2: process(clk, rst)
+		constant SPEED: positive := 5_000_000;
+		constant STEPS: positive := 58;
+		type list2 is array(0 to STEPS-1) of std_logic_vector(6 downto 0);
+		constant pattern: list2 := (
+			"1111110",
+			"1111101",
+			"1111011",
+			"1110111",
+			"1101111",
+			"1011111",
+			"1111110",
+			"1111100",
+			"1111001",
+			"1110011",
+			"1100111",
+			"1001111",
+			"1011110",
+			"1111100",
+			"1111000",
+			"1110001",
+			"1100011",
+			"1000111",
+			"1001110",
+			"1011100",
+			"1111000",
+			"1110000",
+			"1100001",
+			"1000011",
+			"1000110",
+			"1001100",
+			"1011000",
+			"1110000",
+			"1100000",
+			"1000001",
+			"1000010",
+			"1000100",
+			"1001000",
+			"1010000",
+			"1100000",
+			"1000001",
+			"1000011",
+			"1000110",
+			"1001100",
+			"1011000",
+			"1110000", 
+			"1100001",
+			"1000011",
+			"1000111",
+			"1001110",
+			"1011100",
+			"1111000", 
+			"1110001",
+			"1100011",
+			"1000111",
+			"1001111",
+			"1011110",
+			"1111100", 
+			"1111001",
+			"1110011",
+			"1100111",
+			"1001111",
+			"1011111"
+		);
+		variable cnt: natural := 0;
+		variable i: integer := 0;
+	begin
+		if rst = '0' then
+			i := 0;
+			cnt := 0;
+			HEX2 <= (others => '1');
+		elsif rising_edge(clk) then
+			if cnt = SPEED then
+				i := (i + 1) mod STEPS;
+				HEX2 <= pattern(i);
+				cnt := 0;
+			else
+				cnt := cnt + 1;
 			end if;
 		end if;
 	end process;
