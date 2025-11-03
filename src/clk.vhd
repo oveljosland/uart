@@ -30,10 +30,10 @@ begin
 			else
 				i <= i + 1;
 				/*
-				 * uncomment to generate one pulse per baud
+				 * uncomment to generate one pulse/tick per baud
 				 * instead of a square wave clock signal
 				 */
-				--clk_out <= '0'; /* pulse */
+				clk_out <= '0'; /* pulse/tick */
 			end if;
 		end if;
 	end process;

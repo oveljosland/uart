@@ -43,6 +43,7 @@ begin
 			clk => clk,
 			rst => rst,
 			serial_in => rx,
+			baud_tick => baud_tick,
 			data_valid => rx_dv,
 			byte_out => rx_dout
 		);
