@@ -46,15 +46,15 @@ architecture rtl of rx is
 	signal k: natural range 0 to MVOTES - 1 := 0;	/* majority vote counter */
 
 	component fifo
-	port (
-		clk: in std_logic;
-		rst: in std_logic;
-		r: in std_logic;
-		w: in std_logic;
-		data_in: in std_logic_vector(BITWIDTH - 1 downto 0);
-		data_out: out std_logic_vector(BITWIDTH - 1 downto 0);
-		empty, full: out std_logic
-	);
+		port (
+			clk: in std_logic;
+			rst: in std_logic;
+			r: in std_logic;
+			w: in std_logic;
+			data_in: in std_logic_vector(BITWIDTH - 1 downto 0);
+			data_out: out std_logic_vector(BITWIDTH - 1 downto 0);
+			empty, full: out std_logic
+		);
 	end component;
 
 	signal ff_din: std_logic_vector(BITWIDTH - 1 downto 0);
