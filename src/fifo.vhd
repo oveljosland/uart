@@ -11,8 +11,8 @@ entity fifo is
 		rst: in std_logic;
 		r: in std_logic;
 		w: in std_logic;
-		data_in: in std_logic_vector(BITWIDTH - 1 downto 0);
-		data_out: out std_logic_vector(BITWIDTH - 1 downto 0);
+		din: in std_logic_vector(BITWIDTH - 1 downto 0);
+		dout: out std_logic_vector(BITWIDTH - 1 downto 0);
 		empty, full: out std_logic
 	);
 end entity;
@@ -31,12 +31,12 @@ begin
 			i <= 0;
 		elsif rising_edge(clk) then
 			if w = '1' and i < LEN then /* there is room */
-				queue(wp) <= data_in;
+				queue(wp) <= din;
 				wp <= (wp + 1) mod LEN;
 				i <= i + 1;
 			end if;
 			if r = '1' and i > 0 then
-				data_out <= queue(rp);
+				dout <= queue(rp);
 				rp <= (rp + 1) mod LEN;
 				i <= i - 1;
 			end if;
