@@ -18,12 +18,11 @@ entity fifo is
 end entity;
 
 architecture rtl of fifo is
-	constant NBITS: positive := 7;
-	constant DEPTH: positive := 2 ** NBITS;
-	type mem is array (0 to DEPTH-1) of std_logic_vector(BITWIDTH-1 downto 0);
-	signal stack: mem;
+	constant LEN: positive := 2 ** 7;
+	type array_t is array (0 to LEN-1) of std_logic_vector(BITWIDTH-1 downto 0);
+	signal queue: array_t;
 	signal rp, wp: integer := 0;
-	signal i: integer := 0;
+	signal i: natural := 0;
 begin
 	rw: process(clk) begin
 		if rst = '0' then
@@ -31,14 +30,14 @@ begin
 			wp <= 0;
 			i <= 0;
 		elsif rising_edge(clk) then
-			if w = '1' and i < DEPTH then /* there is room */
-				stack(wp) <= data_in; /* push */
-				wp <= (wp + 1) mod DEPTH;
+			if w = '1' and i < LEN then /* there is room */
+				queue(wp) <= data_in;
+				wp <= (wp + 1) mod LEN;
 				i <= i + 1;
 			end if;
 			if r = '1' and i > 0 then
-				data_out <= stack(rp); /* pop */
-				rp <= (rp + 1) mod DEPTH;
+				data_out <= queue(rp);
+				rp <= (rp + 1) mod LEN;
 				i <= i - 1;
 			end if;
 		end if;
@@ -52,7 +51,7 @@ begin
 				empty <= '0';
 			end if;
 			
-			if i = DEPTH then
+			if i = LEN then
 				full <= '1';
 			else
 				full <= '0';
