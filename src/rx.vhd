@@ -45,7 +45,7 @@ architecture rtl of rx is
 	signal clk_cnt: natural range 0 to CLK_PER_SMP - 1 := 0;
 	signal smp_idx: natural range 0 to SMP_PER_BIT - 1 := 0;
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
-	signal votecnt: natural range 0 to MAJVOTES := 0;
+	signal votecnt: natural range 0 to MAJVOTES - 1 := 0;
 begin
 	/* flush: clear registers */
 	procedure flush() is begin
