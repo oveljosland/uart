@@ -36,7 +36,7 @@ end entity;
 
 architecture rtl of rx is
 	
-	constant MVOTES: positive := 5;
+	constant MAJVOTES: positive := 5;
 
 	signal s: state := idle;
 	signal din: std_logic := '0';
@@ -45,8 +45,40 @@ architecture rtl of rx is
 	signal clk_cnt: natural range 0 to CLK_PER_SMP - 1 := 0;
 	signal smp_idx: natural range 0 to SMP_PER_BIT - 1 := 0;
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
-	signal votecnt: natural range 0 to MVOTES := 0;
+	signal votecnt: natural range 0 to MAJVOTES := 0;
 begin
+	/* flush: clear registers */
+	procedure flush() is begin
+		clk_cnt <= 0;
+		smp_idx <= 0;
+		bit_idx <= 0;
+		votecnt <= 0;
+	end procedure;
+
+	/* count_votes:  count ones inside voting window */
+	function count_votes(din: std_logic, idx: natural) return natural is
+		signal cnt: natural := 0;
+	begin
+		/*
+		 * count inside centered -MAJVOTES/2..+MAJVOTES/2 window 
+		 *
+		 * din: _____|`````
+		 * win:    ^...^
+		 *
+		 */
+		if idx >= integer(SMP_PER_BIT/2) - integer(MAJVOTES/2)
+		and idx <=integer(SMP_PER_BIT/2) + integer(MAJVOTES/2) then
+			if din = '1' then
+				if cnt < MAJVOTES then
+					cnt <= cnt + 1;
+				end if;
+			end if;
+		end if;
+		return cnt;
+	end function;
+
+
+
 	/* read:  read rx serial din into rx din register */
 	read: process(clk) begin
 		if rising_edge(clk) then
@@ -62,16 +94,13 @@ begin
 			data_valid <= '0'; /* default */
 			if rising_edge(baud_tick) then /* TODO: check if this works */
 				case s is
-					when idle => /* reset counters */
-						clk_cnt <= 0;
-						smp_idx <= 0;
-						bit_idx <= 0;
-						votecnt <= 0;
+					when idle =>
+						--flush();
 						if din = '0' then /* line low */
-							s <= startbit;
 							clk_cnt <= 0;
 							smp_idx <= 0;
 							votecnt <= 0;
+							s <= startbit;
 						end if;
 
 					when startbit =>
@@ -96,28 +125,15 @@ begin
 					when databit =>
 						if clk_cnt < CLK_PER_SMP - 1 then
 							clk_cnt <= clk_cnt + 1;
-							/* count ones inside the voting window
-							*
-							* din: _____|`````
-							* win:    ^...^
-							*
-							*/
-							if smp_idx >= integer(SMP_PER_BIT/2) -integer(MVOTES/2)
-							and smp_idx <= integer(SMP_PER_BIT/2)+integer(MVOTES/2) then
-								if din = '1' then
-									if votecnt < MVOTES then
-										votecnt <= votecnt + 1;
-									end if;
-								end if;
-							end if;
+							votecnt = count_votes(din, smp_idx);
 						else
 							clk_cnt <= 0;
 							if smp_idx < SMP_PER_BIT - 1 then
 								smp_idx <= smp_idx + 1;
 							else
 								smp_idx <= 0;
-								/* decide value by majority: (MVOTES+1)/2 */
-								if votecnt >= (MVOTES + 1) / 2 then
+								/* decide value by majority: (MAJVOTES+1)/2 */
+								if votecnt >= (MAJVOTES + 1) / 2 then
 									dout <= dout(BITWIDTH - 2 downto 0) & '1';
 								else
 									dout <= dout(BITWIDTH - 2 downto 0) & '0';
@@ -153,10 +169,7 @@ begin
 
 					/* flush:  clean and return to idle */
 					when flush =>
-						clk_cnt <= 0;
-						smp_idx <= 0;
-						bit_idx <= 0;
-						votecnt <= 0;
+						flush();
 						s <= idle;
 				end case;
 			end if;
