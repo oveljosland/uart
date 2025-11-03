@@ -46,9 +46,9 @@ architecture rtl of rx is
 	signal smp_idx: natural range 0 to SMP_PER_BIT - 1 := 0;
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
 	signal votecnt: natural range 0 to MAJVOTES - 1 := 0;
-begin
+
 	/* flush: clear registers */
-	procedure flush() is begin
+	procedure flush is begin
 		clk_cnt <= 0;
 		smp_idx <= 0;
 		bit_idx <= 0;
@@ -56,7 +56,7 @@ begin
 	end procedure;
 
 	/* count_votes:  count ones inside voting window */
-	function count_votes(din: std_logic, idx: natural) return natural is
+	function count_votes(din: std_logic; idx: natural) return natural is
 		variable cnt: natural := 0;
 	begin
 		/*
@@ -66,19 +66,18 @@ begin
 		 * win:    ^...^
 		 *
 		 */
-		if idx >= integer(SMP_PER_BIT/2) - integer(MAJVOTES/2)
-		and idx <=integer(SMP_PER_BIT/2) + integer(MAJVOTES/2) then
+		if idx >= SMP_PER_BIT / 2 - integer(MAJVOTES / 2)
+		and idx <=SMP_PER_BIT / 2 + integer(MAJVOTES / 2) then
 			if din = '1' then
 				if cnt < MAJVOTES then
-					cnt <= cnt + 1;
+					cnt := cnt + 1;
 				end if;
 			end if;
 		end if;
 		return cnt;
 	end function;
 
-
-
+begin
 	/* read:  read rx serial din into rx din register */
 	read: process(clk) begin
 		if rising_edge(clk) then
@@ -125,7 +124,7 @@ begin
 					when databit =>
 						if clk_cnt < CLK_PER_SMP - 1 then
 							clk_cnt <= clk_cnt + 1;
-							votecnt = count_votes(din, smp_idx);
+							votecnt <= count_votes(din, smp_idx);
 						else
 							clk_cnt <= 0;
 							if smp_idx < SMP_PER_BIT - 1 then
@@ -169,7 +168,7 @@ begin
 
 					/* flush:  clean and return to idle */
 					when flush =>
-						flush();
+						flush;
 						s <= idle;
 				end case;
 			end if;
