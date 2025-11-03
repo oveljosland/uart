@@ -2,3 +2,9 @@
 !*/
 !.gitignore
 !*.vhd
+
+# quartus settings file
+!*.qsf
+
+# quartus project file
+!*.qpf
