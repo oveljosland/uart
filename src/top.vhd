@@ -50,10 +50,10 @@ begin
 		port map (
 			clk => clk,
 			rst => rst,
-			serial_in => rx,
+			din => rx,
 			baud_tick => baud_tick,
 			data_valid => rx_dv,
-			byte_out => rx_dout
+			dout => rx_dout
 		);
 
 	rx_fifo: entity work.fifo
