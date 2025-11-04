@@ -47,14 +47,6 @@ architecture rtl of rx is
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
 	signal vot_cnt: natural range 0 to MAJVOTES - 1 := 0;
 
-	/* flush: clear registers */
-	procedure flush is begin
-		clk_cnt <= 0;
-		smp_idx <= 0;
-		bit_idx <= 0;
-		vot_cnt <= 0;
-	end procedure;
-
 	/* count_votes:  count ones inside voting window */
 	function count_votes(data: std_logic; idx: natural) return natural is
 		variable cnt: natural := 0;
@@ -86,7 +78,15 @@ begin
 	end process;
 
 	/* control:  control receiver states */
-	control: process(clk) begin
+	control: process(clk)
+		/* flush: clear registers */
+		procedure flush is begin
+			clk_cnt <= 0;
+			smp_idx <= 0;
+			bit_idx <= 0;
+			vot_cnt <= 0;
+		end procedure;
+	begin
 		if rst = RST then
 			s <= flush;
 		elsif rising_edge(clk) then
