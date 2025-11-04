@@ -132,7 +132,7 @@ begin
 	end process;
 
 	anim2: process(clk, rst)
-		constant SPEED: positive := 1_000_000;
+		constant SPEED: positive := 2_000_000;
 		constant STEPS: positive := 58;
 		type list2 is array(0 to STEPS-1) of std_logic_vector(6 downto 0);
 		constant pattern: list2 := (
