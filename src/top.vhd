@@ -74,9 +74,9 @@ begin
 		);
 	
 	cooltest: process(clk, rst)
-		type char_list is array(0 to 15) of std_logic_vector(7 downto 0);
+		type string is array(0 to 15) of std_logic_vector(7 downto 0);
 
-		constant hex_char: char_list := (
+		constant chars: string := ( /* hexadecimal */
 		/* '0'..'9' */
 		x"30", x"31", x"32", x"33", x"34", x"35", x"36", x"37", x"38", x"39",
 		/* 'A'..'F' */
@@ -90,7 +90,7 @@ begin
 			i := 0;
 		elsif rising_edge(clk) then
 			if d = 50_000_000 / 5 then
-				test_rx_dout <= hex_char(i);
+				test_rx_dout <= chars(i);
 				i := (i +1) mod 16;
 				d := 0;
 			else
@@ -132,7 +132,7 @@ begin
 	end process;
 
 	anim2: process(clk, rst)
-		constant SPEED: positive := 5_000_000;
+		constant SPEED: positive := 2_000_000;
 		constant STEPS: positive := 58;
 		type list2 is array(0 to STEPS-1) of std_logic_vector(6 downto 0);
 		constant pattern: list2 := (
