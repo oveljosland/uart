@@ -4,7 +4,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.all;
 
 library work;
 use work.pkg.all; -- BITWIDT, SMP_PER_BIT, CLK_PER_SMP
@@ -20,6 +19,9 @@ architecture simulation of rx_tb is
     signal serial_in : std_logic := '1'; -- UART-linjen -> idle = 1 
     signal data_valid : std_logic; -- Byte klar signal
     signal byte_out : std_logic_vector(BITWIDTH-1 downto 0) -- Byte mottatt
+
+    -- Forventet byte (sendes og verifiseres)
+    constant EXP_BYTE : std_logic_vector(BITWIDTH-1 downto 0) := x"41"; -- 'A'
 
     begin
         clk <= not clk after CLK_PERIOD/2; -- Generer 50 MHz klokke ved å toggle hver periode/2 (10 ns)
