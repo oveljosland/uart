@@ -160,7 +160,7 @@ begin
 								end if;
 							else
 								smp_idx <= 0;
-								byte <= dout; /* put byte */
+								dout <= byte; /* put byte */
 								data_valid <= '1';
 								s <= idle;
 							end if;
