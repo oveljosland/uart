@@ -1,6 +1,3 @@
-/* testbench for rx module */
-/* Denne testbenken skal kunne simulere oppførselen til rx modulen */
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -13,25 +10,27 @@ end entity;
 
 architecture simulation of rx_tb is 
     constant CLK_PERIOD : time := 20 ns; -- Klokkeperiode (20ns = 50 Mhz)
-    constant BIT_CYCLES : natural := SMP_PER_BIT * CLK_PER_SMP -- Antall klokkesykluser per UART-bit -> 8 samples * antall klokker per sample
+    constant BIT_CYCLES : natural := SMP_PER_BIT * CLK_PER_SMP; -- Antall klokkesykluser per UART-bit -> 8 samples * antall klokker per sample
 
     signal clk : std_logic := '0'; -- Klokkesignal
     signal serial_in : std_logic := '1'; -- UART-linjen -> idle = 1 
     signal data_valid : std_logic; -- Byte klar signal
-    signal byte_out : std_logic_vector(BITWIDTH-1 downto 0) -- Byte mottatt
+    signal byte_out : std_logic_vector(BITWIDTH-1 downto 0); -- Byte mottatt
 
     -- Forventet byte (sendes og verifiseres)
-    constant EXP_BYTE : std_logic_vector(BITWIDTH-1 downto 0) := x"41"; -- 'A'
+    constant EXP_BYTE : std_logic_vector(BITWIDTH-1 downto 0):= x"41"; -- 'A'
 
     begin
         clk <= not clk after CLK_PERIOD/2; -- Generer 50 MHz klokke ved å toggle hver periode/2 (10 ns)
 
-        urx: entity work.urx
+        urx: entity work.rx
             port map (
                 clk => clk, 
-                serial_in => serial_in,
+                din => serial_in,
                 data_valid => data_valid,
-                byte_out => byte_out
+                dout => byte_out,
+		rst => rst,
+		baud_tick => '0'
             );
 
         stim: process 
@@ -52,17 +51,20 @@ architecture simulation of rx_tb is
             send_bit('1'); 
         end procedure; 
 
-        function wait_for_data_valid(max_bits : natural) return boolean is 
-            variable max_cycles : natural := max_bits * BIT_CYCLES + 5; -- max ventetid i klokkepulser (bitperioder + margin)
+        procedure wait_for_data_valid(max_bits : natural; success : out boolean) is
+            variable max_cycles : natural := max_bits * BIT_CYCLES + 5; -- margin
         begin
-            for n in 1 to max_cycles loop -- sjekk inntil timeout
-                wait until rising_edge(clk);  -- vent på klokke
-                if data_valid = '1' then -- hvis data klar
-                    return true; -- returnerer suksess
-                end if; 
-            end loop; 
-            return false; -- timeout ingen data mottatt
-        end function;
+            success := false;
+            for n in 1 to max_cycles loop
+                wait until rising_edge(clk);
+                if data_valid = '1' then
+                    success := true;
+                    exit;
+                end if;
+            end loop;
+        end procedure;
+
+	variable ok : boolean;
 
     begin 
         for i in 1 to 10*BIT_CYCLES loop -- venter litt før start altså idle
@@ -73,12 +75,13 @@ architecture simulation of rx_tb is
 
         send_byte(EXP_BYTE); -- send uart for A
 
-        if wait_for_data_valid(1 + BITWIDTH + 1 + 2) then -- venter på data valid (start + 8 + stopp + margin)
+        wait_for_data_valid(1 + BITWIDTH + 1 + 2, ok); -- start + 8 + stop + margin
+	if ok then
             if byte_out = EXP_BYTE then -- hvis korrekt byte er mottatt
                 report "PASS: Riktig byte mottatt (0x41)" severity note; 
             else 
                 report "FAIL: Feil byte!" severity note;
-            end if
+            end if;
         else 
             report "Fail: Timeout, ingen data_valid" severity error; 
         end if; 
@@ -90,9 +93,5 @@ architecture simulation of rx_tb is
         report "Testbench ferdig" severity note; 
         std.env.stop; -- avslutter simulering
         wait;
-    end process
-end architecture    
-    
-
-
-
+    end process;
+end architecture;
