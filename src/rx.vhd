@@ -91,7 +91,8 @@ begin
 		end procedure;
 	begin
 		if rst = RST then
-			s <= flush;
+			flush;
+			s <= idle;
 		elsif rising_edge(clk) then
 			data_valid <= '0'; /* default */
 			if baud_tick = '1' then
@@ -195,10 +196,11 @@ begin
 								s <= idle;
 							end if;
 						end if;
-
-					/* flush:  clean and return to idle */
+					/*
+					 * TODO: decide if the 'flush' state is necessary,
+					 * it may be used in the tx module.
+					 */
 					when flush =>
-						flush;
 						s <= idle;
 				end case;
 			end if;
