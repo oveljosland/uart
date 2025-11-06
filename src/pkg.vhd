@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 package pkg is
 	constant RST: std_logic := '0'; /* system-wide active low */
-	constant BITWIDTH: positive := 8;
+	constant BITWIDTH: positive := 8; /* 8-bit code set */
 	constant BAUDRATE: positive := 9600; /* B/s */
 	constant SMP_PER_BIT: positive := 8; /* oversamples per bit */
 	constant SYS_CLK_FRQ: positive := 50; /* MHz */
@@ -12,6 +12,7 @@ package pkg is
 	constant CLK_PER_SMP: positive := CLK_PER_BIT / SMP_PER_BIT;
 	
 	type state is (idle, startbit, databit, paritybit, stopbit, flush);
+	type parity is (none, even, odd);
 
 	type list is array (integer range <>) of integer;
 	constant SUPPORTED_BAUDRATES: list := (
@@ -19,14 +20,14 @@ package pkg is
 	);
 	
 	/* functions */
-	function parity(x: std_logic_vector) return std_logic;
+	function par(x: std_logic_vector) return std_logic;
 
 end package;
 
 package body pkg is
 
-	/* parity:  return parity of bit vector */
-	pure function parity(x: std_logic_vector) return std_logic is
+	/* par:  return parity of bit vector */
+	pure function par(x: std_logic_vector) return std_logic is
 		variable p: std_logic := '0';
 	begin
 		for i in x'RANGE loop
