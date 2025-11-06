@@ -9,6 +9,7 @@ entity top is
 	port ( /* TODO: decide which ports to consider */
 		clk: in std_logic; /* SYS_CLK_FRQ defined in pkg */
 		rst: in std_logic; /* RST defined in pkg */
+		pen: in std_logic; /* parity enable */ 
 
 		rx: in std_logic; 
 		tx: out std_logic;
@@ -26,6 +27,7 @@ architecture rtl of top is
 	signal baud_tick: std_logic;
 
 	/* rx tx io */
+	signal perr: std_logic;
 	signal rx_dout: std_logic_vector(BITWIDTH - 1 downto 0);
 	signal tx_din: std_logic_vector(BITWIDTH - 1 downto 0);
 	
@@ -53,7 +55,9 @@ begin
 			din => rx,
 			baud_tick => baud_tick,
 			data_valid => rx_dv,
-			dout => rx_dout
+			dout => rx_dout,
+			pen => pen,
+			perr => perr
 		);
 
 	rx_fifo: entity work.fifo

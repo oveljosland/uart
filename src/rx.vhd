@@ -25,12 +25,14 @@ use work.pkg.all;
 
 entity rx is
 	port (
-		clk: in std_logic;
-		rst: in std_logic;
-		din: in std_logic;
+		clk: in std_logic; /* system clock */
+		rst: in std_logic; /* reset defined in pkg.vhd */
+		din: in std_logic; /* data in */
+		pen: in std_logic; /* parity enable */
 		baud_tick: in std_logic;
 		data_valid: out std_logic;
-		dout: out std_logic_vector(BITWIDTH - 1 downto 0)
+		dout: out std_logic_vector(BITWIDTH - 1 downto 0); /* data out */
+		perr: out std_logic /* parity error */
 	);
 end entity;
 
@@ -46,6 +48,7 @@ architecture rtl of rx is
 	signal smp_idx: natural range 0 to SMP_PER_BIT - 1 := 0;
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
 	signal vot_cnt: natural range 0 to MAJVOTES - 1 := 0;
+	signal par_bit: std_logic := '0';
 
 	/* count_votes:  count ones inside voting window */
 	function count_votes(data: std_logic; idx: natural) return natural is
@@ -91,10 +94,9 @@ begin
 			s <= flush;
 		elsif rising_edge(clk) then
 			data_valid <= '0'; /* default */
-			if rising_edge(baud_tick) then /* TODO: check if this works */
+			if rising_edge(baud_tick) then
 				case s is
 					when idle =>
-						--flush();
 						if data = '0' then /* line low */
 							clk_cnt <= 0;
 							smp_idx <= 0;
@@ -129,7 +131,7 @@ begin
 							clk_cnt <= 0;
 							if smp_idx < SMP_PER_BIT - 1 then
 								smp_idx <= smp_idx + 1;
-							else
+							else /* done sampling */
 								smp_idx <= 0;
 								/* decide value by majority: (MAJVOTES+1)/2 */
 								if vot_cnt >= (MAJVOTES + 1) / 2 then
@@ -142,8 +144,36 @@ begin
 									bit_idx <= bit_idx + 1;
 									s <= databit;
 								else
-									s <= stopbit;
+									s <= paritybit;
 								end if;
+							end if;
+						end if;
+					
+					when paritybit =>
+						if clk_cnt < CLK_PER_SMP - 1 then
+							clk_cnt <= clk_cnt + 1;
+						else
+							clk_cnt <= 0;
+							if smp_idx < SMP_PER_BIT - 1 then
+								smp_idx <= smp_idx + 1;
+							else /* done sampling */
+								smp_idx <= 0;
+								/* decide value by majority */
+								if vot_cnt >= (MAJVOTES + 1) / 2 then
+									par_bit <= '1';
+								else
+									par_bit <= '0';
+								end if;
+								vot_cnt <= 0;
+								if pen = '1' then
+									/* in vhdl, '!=' is '/=' for some reason */
+									if par(byte) /= par_bit then   
+										perr <= '1';
+									else
+										perr <= '0';
+									end if;
+								end if;
+								s <= stopbit;
 							end if;
 						end if;
 
@@ -158,7 +188,7 @@ begin
 									/* false stop: middle sample low */
 									s <= idle;
 								end if;
-							else
+							else /* done sampling */
 								smp_idx <= 0;
 								dout <= byte; /* put byte */
 								data_valid <= '1';
