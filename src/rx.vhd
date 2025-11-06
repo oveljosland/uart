@@ -146,6 +146,9 @@ begin
 								end if;
 							end if;
 						end if;
+					
+					when paritybit =>
+						-- pass
 
 					when stopbit =>
 						if clk_cnt < CLK_PER_SMP - 1 then

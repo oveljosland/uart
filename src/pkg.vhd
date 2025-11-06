@@ -11,7 +11,7 @@ package pkg is
 	constant CLK_PER_BIT: positive := SYS_CLK_FRQ * 1_000_000 / BAUDRATE;
 	constant CLK_PER_SMP: positive := CLK_PER_BIT / SMP_PER_BIT;
 	
-	type state is (idle, startbit, databit, stopbit, flush);
+	type state is (idle, startbit, databit, paritybit, stopbit, flush);
 
 	type list is array (integer range <>) of integer;
 	constant SUPPORTED_BAUDRATES: list := (
@@ -24,13 +24,15 @@ package pkg is
 end package;
 
 package body pkg is
-/* parity:  return parity of bit vector */
-	function parity(x: std_logic_vector) return std_logic is
-		variable tmp: std_logic := '0';
+
+	/* parity:  return parity of bit vector */
+	pure function parity(x: std_logic_vector) return std_logic is
+		variable p: std_logic := '0';
 	begin
 		for i in x'RANGE loop
-			tmp := tmp xor x(i);
+			p := p xor x(i);
 		end loop;
-		return tmp;
+		return p;
 	end function;
+
 end package body;
