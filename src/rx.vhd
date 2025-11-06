@@ -94,7 +94,7 @@ begin
 			s <= flush;
 		elsif rising_edge(clk) then
 			data_valid <= '0'; /* default */
-			if rising_edge(baud_tick) then
+			if baud_tick = '1' then
 				case s is
 					when idle =>
 						if data = '0' then /* line low */
