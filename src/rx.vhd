@@ -80,7 +80,7 @@ begin
 			vot_cnt <= 0;
 		end procedure;
 	begin
-		if rst = CRST then
+		if rst = SYSRST then
 			s <= idle;
 			flush;
 		elsif rising_edge(clk) then
