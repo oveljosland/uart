@@ -20,7 +20,7 @@ package pkg is
 	);
 	
 	/* functions */
-	function par(x: std_logic_vector) return std_logic;
+	pure function par(x: std_logic_vector) return std_logic;
 
 end package;
 
