@@ -52,12 +52,12 @@ architecture rtl of rx is
 
 	signal s: state := idle;
 
-	signal data: std_logic := '0';
-	signal data_out: std_logic_vector(BITWIDTH-1 downto 0);      --(others=>'0');
+	signal data_in: std_logic := '0';
+	signal data_out: std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0');
 	signal clk_cnt: natural range 0 to CLK_PER_SMP - 1 := 0;
 	signal smp_idx: natural range 0 to SMP_PER_BIT - 1 := 0;
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
-	signal vot_cnt: natural range 0 to MAJVOTES := 0;
+	signal maj_cnt: natural range 0 to MAJVOTES := 0;
 	signal par_bit: std_logic := '0';
 
 
@@ -77,7 +77,7 @@ begin
 			clk_cnt <= 0;
 			smp_idx <= 0;
 			bit_idx <= 0;
-			vot_cnt <= 0;
+			maj_cnt <= 0;
 		end procedure;
 	begin
 		if rst = SYSRST then
@@ -90,7 +90,7 @@ begin
 					if data_in = '0' then /* line low */
 						clk_cnt <= 0;
 						smp_idx <= 0;
-						vot_cnt <= 0;
+						maj_cnt <= 0;
 						s <= startbit;
 					end if;
 
@@ -108,7 +108,7 @@ begin
 							end if;
 						else /* got startbit */
 							smp_idx <= 0;
-							vot_cnt <= 0;
+							maj_cnt <= 0;
 							bit_idx <= 0;
 							s <= databit;
 						end if;
@@ -121,8 +121,8 @@ begin
 						clk_cnt <= 0;
 						/* count ones in voting window */
 						if smp_idx >= LO and smp_idx <= HI then
-							if data_in = '1' and vot_cnt < MAJVOTES then
-								vot_cnt <= vot_cnt + 1;
+							if data_in = '1' and maj_cnt < MAJVOTES then
+								maj_cnt <= maj_cnt + 1;
 							end if;
 						end if;
 
@@ -131,12 +131,12 @@ begin
 						else /* done sampling */
 							smp_idx <= 0;
 							/* decide value by majority: (MAJVOTES+1)/2 */
-							if vot_cnt >= (MAJVOTES + 1) / 2 then
+							if maj_cnt >= (MAJVOTES + 1) / 2 then
 								data_out <= data_out(BITWIDTH - 2 downto 0) & '1';
 							else
 								data_out <= data_out(BITWIDTH - 2 downto 0) & '0';
 							end if;
-							vot_cnt <= 0;
+							maj_cnt <= 0;
 							if bit_idx < BITWIDTH - 1 then
 								bit_idx <= bit_idx + 1;
 								s <= databit;
@@ -152,8 +152,8 @@ begin
 						
 						/* count ones in voting window */
 						if smp_idx >= LO and smp_idx <= HI then
-							if data_in = '1' and vot_cnt < MAJVOTES then
-								vot_cnt <= vot_cnt + 1;
+							if data_in = '1' and maj_cnt < MAJVOTES then
+								maj_cnt <= maj_cnt + 1;
 							end if;
 						end if;
 					else
@@ -163,12 +163,12 @@ begin
 						else /* done sampling */
 							smp_idx <= 0;
 							/* decide value by majority */
-							if vot_cnt >= (MAJVOTES + 1) / 2 then
+							if maj_cnt >= (MAJVOTES + 1) / 2 then
 								par_bit <= '1';
 							else
 								par_bit <= '0';
 							end if;
-							vot_cnt <= 0;
+							maj_cnt <= 0;
 							if pen = '1' then
 								/* in vhdl, '!=' is '/=' for some reason */
 								if par(data_out) /= par_bit then   
