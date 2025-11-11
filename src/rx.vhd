@@ -14,8 +14,6 @@
 -- should support parity control (even, odd, none).
 -- should be able to change baud rate when running.
 
-/* TODO: non-critical: implement parity. */
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -51,7 +49,7 @@ architecture rtl of rx is
 	signal clk_cnt: natural range 0 to CLK_PER_SMP - 1 := 0;
 	signal smp_idx: natural range 0 to SMP_PER_BIT - 1 := 0;
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
-	signal maj_cnt: natural range 0 to MAJVOTES - 1 := 0;
+	signal maj_cnt: natural range 0 to MAJVOTES := 0;
 	signal par_bit: std_logic := '0';
 
 
@@ -96,7 +94,7 @@ begin
 							clk_cnt <= 0;
 							if smp_idx < SMP_PER_BIT - 1 then
 								smp_idx <= smp_idx + 1;
-								if smp_idx = SMP_PER_BIT / 2 and data_in = '1' then
+								if smp_idx = SMP_PER_BIT/2 and data_in='1' then
 									/* false start: middle sample high */
 									s <= idle;
 								end if;
@@ -126,9 +124,11 @@ begin
 								smp_idx <= 0;
 								/* decide value by majority: (MAJVOTES+1)/2 */
 								if maj_cnt >= (MAJVOTES + 1) / 2 then
-									data_out <= data_out(BITWIDTH - 2 downto 0) & '1';
+									data_out <=
+										data_out(BITWIDTH - 2 downto 0) & '1';
 								else
-									data_out <= data_out(BITWIDTH - 2 downto 0) & '0';
+									data_out <=
+										data_out(BITWIDTH - 2 downto 0) & '0';
 								end if;
 								maj_cnt <= 0;
 								if bit_idx < BITWIDTH - 1 then
@@ -182,7 +182,7 @@ begin
 							clk_cnt <= 0;
 							if smp_idx < SMP_PER_BIT - 1 then
 								smp_idx <= smp_idx + 1;
-								if smp_idx = SMP_PER_BIT / 2 and data_in = '0' then
+								if smp_idx = SMP_PER_BIT/2 and data_in='0' then
 									/* false stop: middle sample low */
 									s <= idle;
 								end if;
