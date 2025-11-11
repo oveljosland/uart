@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 
 library work;
 use work.pkg.BITWIDTH;
+use work.pkg.SYSRESET;
 
 entity fifo is
 	port (
