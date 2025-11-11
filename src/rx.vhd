@@ -65,7 +65,7 @@ begin
 	end process;
 
 	/* control:  control receiver states */
-	control: process(clk)
+	control: process(clk, rst)
 		/* flush: clear registers */
 		procedure flush is begin
 			clk_cnt <= 0;
