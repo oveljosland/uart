@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 package pkg is
-	constant RST: std_logic := '0'; /* system-wide active low */
+	constant CRST: std_logic := '0'; /* system-wide active low */
 	constant BITWIDTH: positive := 8; /* 8-bit code set */
 	constant BAUDRATE: positive := 9600; /* B/s */
 	constant SMP_PER_BIT: positive := 8; /* oversamples per bit */
@@ -20,7 +20,7 @@ package pkg is
 	);
 	
 	/* functions */
-	function par(x: std_logic_vector) return std_logic;
+	pure function par(x: std_logic_vector) return std_logic;
 
 end package;
 
