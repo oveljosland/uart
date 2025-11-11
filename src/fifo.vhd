@@ -25,7 +25,7 @@ architecture rtl of fifo is
 	signal i: natural := 0;
 begin
 	rw: process(clk) begin
-		if rst = RST then
+		if rst = SYSRESET then
 			rp <= 0;
 			wp <= 0;
 			i <= 0;

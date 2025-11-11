@@ -74,7 +74,7 @@ begin
 			vot_cnt <= 0;
 		end procedure;
 	begin
-		if rst = RST then
+		if rst = SYSRESET then
 			flush;
 			s <= idle;
 		elsif rising_edge(clk) then

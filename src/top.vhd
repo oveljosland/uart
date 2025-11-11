@@ -8,7 +8,7 @@ use work.pkg.all;
 entity top is
 	port ( /* TODO: decide which ports to consider */
 		clk: in std_logic; /* SYS_CLK_FRQ defined in pkg */
-		rst: in std_logic; /* RST defined in pkg */
+		rst: in std_logic; /* SYSRESET defined in pkg */
 		pen: in std_logic; /* parity enable */ 
 
 		rx: in std_logic; 
