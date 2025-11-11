@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 
 library work;
 use work.pkg.BITWIDTH;
+use work.pkg.SYSRESET;
 
 entity fifo is
 	port (
@@ -24,8 +25,8 @@ architecture rtl of fifo is
 	signal rp, wp: integer := 0;
 	signal i: natural := 0;
 begin
-	rw: process(clk) begin
-		if rst = RST then
+	rw: process(clk, rst) begin
+		if rst = SYSRESET then
 			rp <= 0;
 			wp <= 0;
 			i <= 0;

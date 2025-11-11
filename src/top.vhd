@@ -5,18 +5,29 @@ use ieee.numeric_std.all;
 library work;
 use work.pkg.all;
 
+/* control/top module */
+
+/* requirements */
+-- print ascii code to seven-segment display.
+-- flash led when a character is received.
+-- loopback: send received character back immediately.
+-- should send predetermined character with a button press.
+-- can send a predetermined string of at least eight characters.
+-- can adjust baud rate while running (100 kb/s – 1 Mb/s in 100 kb/s steps).
+
+
 entity top is
 	port ( /* TODO: decide which ports to consider */
 		clk: in std_logic; /* SYS_CLK_FRQ defined in pkg */
-		rst: in std_logic; /* RST defined in pkg */
+		rst: in std_logic; /* SYSRESET defined in pkg */
 		pen: in std_logic; /* parity enable */ 
 
-		rx: in std_logic; 
-		tx: out std_logic;
+		rx: in std_logic := '0'; 
+		tx: out std_logic := '0';
 
-		HEX0: out std_logic_vector(6 downto 0);
-		HEX1: out std_logic_vector(6 downto 0);
-		HEX2: out std_logic_vector(6 downto 0)
+		HEX0: out std_logic_vector(6 downto 0) := (others => '0');
+		HEX1: out std_logic_vector(6 downto 0) := (others => '0');
+		HEX2: out std_logic_vector(6 downto 0) := (others => '0')
 	);
 end entity;
 
@@ -34,8 +45,8 @@ architecture rtl of top is
 	/* rx fifo */
 	signal ff_din: std_logic_vector(BITWIDTH - 1 downto 0);
 	signal ff_dout: std_logic_vector(BITWIDTH - 1 downto 0);
-	signal ff_read, ff_write: std_logic; /* r/w enable */
-	signal ff_empty, ff_full: std_logic; /* stauts flags */
+	signal ff_read, ff_write: std_logic := '0'; /* r/w enable */
+	signal ff_empty, ff_full: std_logic := '0'; /* stauts flags */
 
 	/* test: rx --> display */
 	signal test_rx_dout: std_logic_vector(BITWIDTH - 1 downto 0);

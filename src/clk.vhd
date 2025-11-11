@@ -20,7 +20,7 @@ architecture rtl of baud_clock is
 begin
 	/* gen:  generate baud rate clock */
 	gen: process(clk, rst) begin
-		if rst = SYSRST then
+		if rst = SYSRESET then
 			i <= 0;
 			clk_out <= '0';
 		elsif rising_edge(clk) then

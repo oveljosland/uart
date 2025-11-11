@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 package pkg is
-	constant SYSRST: std_logic := '0'; /* system-wide active low */
+	constant SYSRESET: std_logic := '0'; /* system-wide active low */
 	constant BITWIDTH: positive := 8; /* 8-bit code set */
 	constant BAUDRATE: positive := 9600; /* B/s */
 	constant SMP_PER_BIT: positive := 8; /* oversamples per bit */

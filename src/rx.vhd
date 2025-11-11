@@ -1,20 +1,18 @@
 /* requirements */
 -- must support the UART protocol.
 	-- 1 start bit.
-	-- 8 data bits.
+	-- 8 data_in bits.
 	-- 1 stop bit.
 	-- no parity bits.
 --x must support baud rate of at least 9600.
---x must be able to store at least one received byte.
+--x must be able to store at least one received data_out.
 --x must use 8x oversampling on the rx signal, and sample the middle of the
 --  bit period to determine the value.
---x must indicate when data is received and ready to be used (data valid).
+--x must indicate when data_in is received and ready to be used (data_in valid).
 --x can do majority decision based on 5 samples in the middle of the bit period.
---x can have a 16 byte FIFO to store bytes, delete new data when full.
+--x can have a 16 data_out FIFO to store bytes, delete new data_in when full.
 -- should support parity control (even, odd, none).
 -- should be able to change baud rate when running.
-
-/* TODO: non-critical: implement parity. */
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -27,7 +25,7 @@ entity rx is
 	port (
 		clk: in std_logic; /* system clock */
 		rst: in std_logic; /* reset defined in pkg.vhd */
-		din: in std_logic; /* data in */
+		din: in std_logic; /* data_in in */
 		pen: in std_logic; /* parity enable */
 		baud_tick: in std_logic;
 		data_valid: out std_logic;
@@ -63,7 +61,7 @@ architecture rtl of rx is
 
 
 begin
-	/* read:  read 'din' into 'data' register */
+	/* read:  read 'din' into 'data_in' register */
 	read: process(clk) begin
 		if rising_edge(clk) then
 			data_in <= din;
@@ -80,7 +78,8 @@ begin
 			maj_cnt <= 0;
 		end procedure;
 	begin
-		if rst = SYSRST then
+		if rst = SYSRESET then
+			flush;
 			s <= idle;
 			flush;
 		elsif rising_edge(clk) then
