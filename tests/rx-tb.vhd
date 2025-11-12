@@ -24,9 +24,8 @@ architecture simulation of rx_tb is
     -- Forventet byte (sendes og verifiseres)
     constant EXP_BYTE : std_logic_vector(0 to BITWIDTH-1):= "01000001";--x"41"; -- 'A' '01000001'
 
-    signal fifi : std_logic_vector(8*16-1 downto 0); -- FIFO signal
-    signal di : std_logic := '0'; -- for testing purposes only
-    signal statusbatus : std_logic_vector(7 downto 0):=(others=>'0'); -- for testing purposes only
+    signal flagtemp : std_logic := '0'; -- for testing purposes only
+    signal statustemp : std_logic_vector(7 downto 0):=(others=>'0'); -- for testing purposes only
     begin
         clk <= not clk after CLK_PERIOD/2; -- Generer 50 MHz klokke ved å toggle hver periode/2 (10 ns)
         clkgen: entity work.baud_clock
@@ -45,9 +44,8 @@ architecture simulation of rx_tb is
 		baud_tick => baud_tick,
 		pen => pen,
         perr => perr,
-        di => di,
-        statusbatus => statusbatus,
-        fifomathiasmaten => fifi
+        flagtemp => flagtemp,
+        statustemp => statustemp
             );
 
         stim: process 
@@ -141,24 +139,6 @@ architecture simulation of rx_tb is
         send_byte("01110010"); -- r
         send_byte("00100001"); -- !
         wait until data_valid = '1';
-        report "fifo er" & integer'image(to_integer(unsigned(fifi(8*16-1 downto 8*16-8)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-8 downto 8*16-16)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-16 downto 8*16-24)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-24 downto 8*16-32)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-32 downto 8*16-40)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-40 downto 8*16-48)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-48 downto 8*16-56)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-56 downto 8*16-64)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-64 downto 8*16-72)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-72 downto 8*16-80)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-80 downto 8*16-88)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-88 downto 8*16-96)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-96 downto 8*16-104)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-104 downto 8*16-112)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-112 downto 8*16-120)))) & " " &
-               integer'image(to_integer(unsigned(fifi(8*16-1-120 downto 8*16-128)))) severity note;
-
-
         
         -- Wait a bit before ending the simulation
         for k in 1 to 5 * BIT_CYCLES loop
