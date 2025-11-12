@@ -3,7 +3,6 @@
 	-- 1 start bit.
 	-- 8 data_in bits.
 	-- 1 stop bit.
-	-- no parity bits.
 --x must support baud rate of at least 9600.
 --x must be able to store at least one received data_out.
 --x must use 8x oversampling on the rx signal, and sample the middle of the
@@ -32,11 +31,11 @@ entity rx is
 		dout: out std_logic_vector(BITWIDTH - 1 downto 0); /* data out */
 		perr: out std_logic; /* parity error */
 
-
-		fifomathiasmaten: out std_logic_vector(8*16-1 downto 0);
-		di: out std_logic := '0'; --for testing purposes only
-		statusbatus: out std_logic_vector(7 downto 0):=(others=>'0'); -- for testing purposes only
-		bytus: out std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0')
+		--test variables
+		flagtemp: out std_logic := '0'; --flag variable
+		statustemp: out std_logic_vector(7 downto 0):=(others=>'0'); -- for testing purposes only
+		douttemp: out std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0');
+		par_bit_temp: out std_logic := '0'  -- for testing purposes only
 	);
 end entity;
 
@@ -154,6 +153,13 @@ begin
 							if data_in = '1' and maj_cnt < MAJVOTES then
 								maj_cnt <= maj_cnt + 1;
 							end if;
+						elsif smp_idx > HI then -- checking bit value after voting window
+
+							if maj_cnt >= (MAJVOTES + 1) / 2 then  /* decide value by majority */
+								par_bit <= '1';
+							else
+								par_bit <= '0';
+							end if;
 						end if;
 					else
 						clk_cnt <= 0;
@@ -161,20 +167,12 @@ begin
 							smp_idx <= smp_idx + 1;
 						else /* done sampling */
 							smp_idx <= 0;
-							/* decide value by majority */
-							if maj_cnt >= (MAJVOTES + 1) / 2 then
-								par_bit <= '1';
-							else
-								par_bit <= '0';
-							end if;
 							maj_cnt <= 0;
-							if pen = '1' then
-								/* in vhdl, '!=' is '/=' for some reason */
-								if par(data_out) /= par_bit then   
-									perr <= '1';
-								else
-									perr <= '0';
-								end if;
+							/* decide value by majority */
+							if  par_bit /= par(data_out) and pen = '1' then
+								perr <= '1';
+							else
+								perr <= '0';
 							end if;
 							s <= stopbit;
 						end if;
@@ -194,7 +192,6 @@ begin
 						else /* done sampling */
 							smp_idx <= 0;
 							dout <= data_out; /* put data_out */
-							fifomathiasmaten <= fifomathiasmaten(8*16-1-8 downto 0) & data_out; -- put data_out in FIFO
 							data_valid <= '1';
 							s <= idle;
 						end if;
@@ -210,24 +207,25 @@ begin
 	end process;
 
 
-	process(s, data_out) is
+	process(s, data_out, par_bit) is
 	begin
 		-- for testing purposes only
-		bytus <= data_out;
+		douttemp <= data_out;
+		par_bit_temp <= par_bit;
 		if s = idle then
-			statusbatus <= "00000001";
+			statustemp <= "00000001";
 		elsif s = startbit then
-			statusbatus <= "00000010";
+			statustemp <= "00000010";
 		elsif s = databit then
-			statusbatus <= "00000100";
+			statustemp <= "00000100";
 		elsif s = paritybit then
-			statusbatus <= "00001000";
+			statustemp <= "00001000";
 		elsif s = stopbit then
-			statusbatus <= "00010000";
+			statustemp <= "00010000";
 		elsif s = flush then
-			statusbatus <= "00100000";
+			statustemp <= "00100000";
 		else
-			statusbatus <= "11111111";
+			statustemp <= "11111111";
 		end if;
 	end process;
 end architecture;
