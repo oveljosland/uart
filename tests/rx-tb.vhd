@@ -99,33 +99,33 @@ architecture simulation of rx_tb is
         end loop;
         
 
-        -- Test 1: Send byte 0x41 ('A') and check if it is received correctly
-        report "Sender byte 0x41 ('A')" severity note; -- Melding i simulatoren
-        send_byte(EXP_BYTE); -- send uart for A
+        -- Test 1: Send byte 11000001 and check if it is received correctly
+        report "Sender byte 11000001" severity note;
+        send_byte(EXP_BYTE);
         wait_for_data_valid(1 + BITWIDTH + 1 + 2, ok); -- start + 8 + stop + margin
 	    if ok then
-            if dout = EXP_BYTE then -- hvis korrekt byte er mottatt
-                report "PASS: Riktig byte mottatt (0x41)" severity note; 
+            if dout = EXP_BYTE then -- if received byte matches expected byte
+                report "PASS: correct byte received" severity note; 
             else 
-                report "FAIL: Feil byte!" severity note;
+                report "FAIL: wrong byte received" severity note;
             end if;
         else 
-            report "Fail: Timeout, ingen data_valid" severity error; 
+            report "Fail: Timeout, no data_valid" severity error; 
         end if; 
 
 
-        -- Test 2: Send byte 0x55 ('U') and check if it is received correctly
-        report "Sender byte 0x55 ('U')" severity note;
+        -- Test 2: Send byte 01010101 and check if it is received correctly
+        report "Sender byte 01010101" severity note;
         send_byte("01010101"); -- send uart for U
         wait_for_data_valid(1 + BITWIDTH + 1 + 2, ok); -- start + 8 + stop + margin
         if ok then 
             if dout = "01010101" then 
-                report "PASS: Riktig byte mottatt (0x55)" severity note; 
+                report "PASS: correct byte received (0x55)" severity note; 
             else 
-                report "FAIL: Feil byte!" severity note;
+                report "FAIL: wrong byte received" severity note;
             end if;
         else 
-            report "Fail: Timeout, ingen data_valid" severity error;
+            report "Fail: Timeout, no data_valid" severity error;
         end if;
 
         /*
