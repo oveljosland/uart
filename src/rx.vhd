@@ -34,7 +34,8 @@ entity rx is
 		--test variables
 		flagtemp: out std_logic := '0'; --flag variable
 		statustemp: out std_logic_vector(7 downto 0):=(others=>'0'); -- for testing purposes only
-		douttemp: out std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0')
+		douttemp: out std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0');
+		par_bit_temp: out std_logic := '0'  -- for testing purposes only
 	);
 end entity;
 
@@ -152,6 +153,13 @@ begin
 							if data_in = '1' and maj_cnt < MAJVOTES then
 								maj_cnt <= maj_cnt + 1;
 							end if;
+						elsif smp_idx > HI then -- checking bit value after voting window
+
+							if maj_cnt >= (MAJVOTES + 1) / 2 then  /* decide value by majority */
+								par_bit <= '1';
+							else
+								par_bit <= '0';
+							end if;
 						end if;
 					else
 						clk_cnt <= 0;
@@ -159,20 +167,12 @@ begin
 							smp_idx <= smp_idx + 1;
 						else /* done sampling */
 							smp_idx <= 0;
-							/* decide value by majority */
-							if maj_cnt >= (MAJVOTES + 1) / 2 then
-								par_bit <= '1';
-							else
-								par_bit <= '0';
-							end if;
 							maj_cnt <= 0;
-							if pen = '1' then
-								/* in vhdl, '!=' is '/=' for some reason */
-								if par(data_out) /= par_bit then   
-									perr <= '1';
-								else
-									perr <= '0';
-								end if;
+							/* decide value by majority */
+							if  par_bit /= par(data_out) and pen = '1' then
+								perr <= '1';
+							else
+								perr <= '0';
 							end if;
 							s <= stopbit;
 						end if;
@@ -207,10 +207,11 @@ begin
 	end process;
 
 
-	process(s, data_out) is
+	process(s, data_out, par_bit) is
 	begin
 		-- for testing purposes only
 		douttemp <= data_out;
+		par_bit_temp <= par_bit;
 		if s = idle then
 			statustemp <= "00000001";
 		elsif s = startbit then

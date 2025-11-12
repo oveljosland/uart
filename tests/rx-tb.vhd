@@ -15,17 +15,20 @@ architecture simulation of rx_tb is
     signal rst : std_logic := '0'; -- reset signal
     signal clk : std_logic := '0'; -- Klokkesignal
     signal serial_in : std_logic := '1'; -- UART-linjen -> idle = 1 
-    signal data_valid : std_logic; -- Byte klar signal
-    signal byte_out : std_logic_vector(BITWIDTH-1 downto 0); -- Byte mottatt
+    signal data_valid : std_logic; -- Byte ready data
     signal pen: std_logic:= '1'; /* parity enable */
     signal perr: std_logic; /* parity error */
     signal baud_tick: std_logic;
+    signal dout: std_logic_vector(BITWIDTH - 1 downto 0); -- received data out
+    
 
-    -- Forventet byte (sendes og verifiseres)
-    constant EXP_BYTE : std_logic_vector(0 to BITWIDTH-1):= "01000001";--x"41"; -- 'A' '01000001'
+    -- expected byte
+    constant EXP_BYTE : std_logic_vector(0 to BITWIDTH-1):= "11000001";--x"41"; -- 'A' '01000001'
 
+    signal par_bit_temp : std_logic := '0'; -- for testing purposes only
     signal flagtemp : std_logic := '0'; -- for testing purposes only
     signal statustemp : std_logic_vector(7 downto 0):=(others=>'0'); -- for testing purposes only
+    signal douttemp : std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0'); -- for testing purposes only
     begin
         clk <= not clk after CLK_PERIOD/2; -- Generer 50 MHz klokke ved å toggle hver periode/2 (10 ns)
         clkgen: entity work.baud_clock
@@ -39,13 +42,17 @@ architecture simulation of rx_tb is
                 clk => clk, 
                 din => serial_in,
                 data_valid => data_valid,
-                dout => byte_out,
+                dout => dout,
 		rst => rst,
 		baud_tick => baud_tick,
 		pen => pen,
         perr => perr,
+
+
         flagtemp => flagtemp,
-        statustemp => statustemp
+        statustemp => statustemp,
+        douttemp => douttemp,
+        par_bit_temp => par_bit_temp
             );
 
         stim: process 
@@ -97,7 +104,7 @@ architecture simulation of rx_tb is
         send_byte(EXP_BYTE); -- send uart for A
         wait_for_data_valid(1 + BITWIDTH + 1 + 2, ok); -- start + 8 + stop + margin
 	    if ok then
-            if byte_out = EXP_BYTE then -- hvis korrekt byte er mottatt
+            if dout = EXP_BYTE then -- hvis korrekt byte er mottatt
                 report "PASS: Riktig byte mottatt (0x41)" severity note; 
             else 
                 report "FAIL: Feil byte!" severity note;
@@ -112,7 +119,7 @@ architecture simulation of rx_tb is
         send_byte("01010101"); -- send uart for U
         wait_for_data_valid(1 + BITWIDTH + 1 + 2, ok); -- start + 8 + stop + margin
         if ok then 
-            if byte_out = "01010101" then 
+            if dout = "01010101" then 
                 report "PASS: Riktig byte mottatt (0x55)" severity note; 
             else 
                 report "FAIL: Feil byte!" severity note;
@@ -121,6 +128,7 @@ architecture simulation of rx_tb is
             report "Fail: Timeout, ingen data_valid" severity error;
         end if;
 
+        /*
         -- send hei mathias her!
         send_byte("01101000"); -- h
         send_byte("01100101"); -- e
@@ -139,7 +147,7 @@ architecture simulation of rx_tb is
         send_byte("01110010"); -- r
         send_byte("00100001"); -- !
         wait until data_valid = '1';
-        
+        */
         -- Wait a bit before ending the simulation
         for k in 1 to 5 * BIT_CYCLES loop
             wait until rising_edge(clk); 
