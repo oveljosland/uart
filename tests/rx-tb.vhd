@@ -56,10 +56,10 @@ architecture simulation of rx_tb is
             );
 
         stim: process 
-            procedure send_bit(b : std_logic) is -- send en uart bit på serial_in
+            procedure send_bit(b : std_logic) is -- send a bit on serial_in
             begin
-                serial_in <= b; -- settter linjen til bitverdien
-                for cyc in 1 to BIT_CYCLES loop --  Holder biten en hel bitperiode
+                serial_in <= b;
+                for cyc in 1 to BIT_CYCLES loop --  hold bit an entire baud period
                     wait until rising_edge(clk); 
                 end loop;
                 end procedure;
@@ -67,11 +67,11 @@ architecture simulation of rx_tb is
         procedure send_byte(b : std_logic_vector(0 to BITWIDTH-1)) is 
         begin
             send_bit('0'); --send startbit (0)
-            for i in 0 to BITWIDTH-1 loop -- send databiter
+            for i in 0 to BITWIDTH-1 loop -- send databits
                 send_bit(b(i)); 
             end loop; 
             if pen = '1' then
-                send_bit(par(b)); -- send paritybit hvis aktivert
+                send_bit(par(b)); -- send paritybit if activated
             end if;
             send_bit('1'); 
         end procedure; 
@@ -92,9 +92,10 @@ architecture simulation of rx_tb is
 	variable ok : boolean;
 
     begin 
+        wait for 100 ns; -- initial delay
         wait until rising_edge(clk);
             rst <= '1'; -- release reset (inactive high)
-        for k in 1 to 10*BIT_CYCLES loop -- venter litt før start altså idle
+        for k in 1 to 10*BIT_CYCLES loop
             wait until rising_edge(clk);
         end loop;
         
@@ -116,7 +117,7 @@ architecture simulation of rx_tb is
 
         -- Test 2: Send byte 01010101 and check if it is received correctly
         report "Sender byte 01010101" severity note;
-        send_byte("01010101"); -- send uart for U
+        send_byte("01010101"); 
         wait_for_data_valid(1 + BITWIDTH + 1 + 2, ok); -- start + 8 + stop + margin
         if ok then 
             if dout = "01010101" then 
@@ -154,7 +155,7 @@ architecture simulation of rx_tb is
         end loop;
 
         report "Testbench ferdig" severity note; 
-        std.env.stop; -- avslutter simulering
+        std.env.stop;
         wait;
     end process;
 end architecture;
