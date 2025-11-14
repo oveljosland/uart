@@ -68,7 +68,7 @@ begin
 	end process;
 
 	/* control:  control receiver states */
-	control: process(clk, rst)
+	control: process(baud_tick, rst)
 		/* flush: clear registers */
 		procedure flush is begin
 			clk_cnt <= 0;
@@ -81,7 +81,7 @@ begin
 			flush;
 			s <= idle;
 			flush;
-		elsif rising_edge(clk) then
+		elsif rising_edge(baud_tick) then
 			data_valid <= '0'; /* default */
 			case s is
 				when idle =>
@@ -93,106 +93,83 @@ begin
 					end if;
 
 				when startbit =>
-					if clk_cnt < CLK_PER_SMP - 1 then
-						clk_cnt <= clk_cnt + 1;
-					else
-						
-						clk_cnt <= 0;
-						if smp_idx < SMP_PER_BIT - 1 then
-							smp_idx <= smp_idx + 1;
-							if smp_idx = SMP_PER_BIT / 2 and data_in = '1' then
-								/* false start: middle sample high */
-								s <= idle;
-							end if;
-						else /* got startbit */
-							smp_idx <= 0;
-							maj_cnt <= 0;
-							bit_idx <= 0;
-							s <= databit;
+					if smp_idx < SMP_PER_BIT - 1 then
+						smp_idx <= smp_idx + 1;
+						if smp_idx = SMP_PER_BIT / 2 and data_in = '1' then
+							/* false start: middle sample high */
+							s <= idle;
 						end if;
+					else /* got startbit */
+						smp_idx <= 0;
+						maj_cnt <= 0;
+						bit_idx <= 0;
+						s <= databit;
 					end if;
-
 				when databit =>
-					if clk_cnt < CLK_PER_SMP - 1 then
-						clk_cnt <= clk_cnt + 1;
-					else
-						clk_cnt <= 0;
 						/* count ones in voting window */
-						if smp_idx >= LO and smp_idx <= HI then
-							if data_in = '1' and maj_cnt < MAJVOTES then
-								maj_cnt <= maj_cnt + 1;
-							end if;
-						end if;
-
-						if smp_idx < SMP_PER_BIT - 1 then
-							smp_idx <= smp_idx + 1;
-						else /* done sampling */
-							smp_idx <= 0;
-							/* decide value by majority: (MAJVOTES+1)/2 */
-							if maj_cnt >= (MAJVOTES + 1) / 2 then
-								data_out <= data_out(BITWIDTH - 2 downto 0) & '1';
-							else
-								data_out <= data_out(BITWIDTH - 2 downto 0) & '0';
-							end if;
-							maj_cnt <= 0;
-							if bit_idx < BITWIDTH - 1 then
-								bit_idx <= bit_idx + 1;
-								s <= databit;
-							else
-								s <= paritybit;
-							end if;
+					if smp_idx >= LO and smp_idx <= HI then
+						if data_in = '1' and maj_cnt < MAJVOTES then
+							maj_cnt <= maj_cnt + 1;
 						end if;
 					end if;
-				
-				when paritybit =>
-					if clk_cnt < CLK_PER_SMP - 1 then
-						clk_cnt <= clk_cnt + 1;
-						
 
-					else
-						clk_cnt <= 0;
-						if smp_idx >= LO and smp_idx <= HI then
-							if data_in = '1' and maj_cnt < MAJVOTES then 
-								maj_cnt <= maj_cnt + 1;	/* count ones in voting window */
-							end if;
-						elsif smp_idx > HI then -- checking bit value after voting window
-							if maj_cnt >= (MAJVOTES + 1) / 2 then  /* decide value by majority */
-								par_bit <= '1';
-							else
-								par_bit <= '0';
-							end if;
+					if smp_idx < SMP_PER_BIT - 1 then
+						smp_idx <= smp_idx + 1;
+					else /* done sampling */
+						smp_idx <= 0;
+						/* decide value by majority: (MAJVOTES+1)/2 */
+						if maj_cnt >= (MAJVOTES + 1) / 2 then
+							data_out <= data_out(BITWIDTH - 2 downto 0) & '1';
+						else
+							data_out <= data_out(BITWIDTH - 2 downto 0) & '0';
 						end if;
-						if smp_idx < SMP_PER_BIT - 1 then
-							smp_idx <= smp_idx + 1;
-						else /* done sampling */
-							smp_idx <= 0;
-							maj_cnt <= 0;
-							if  par_bit /= par(data_out) and pen = '1' then /* check for parity error */
-								perr <= '1';
-							else
-								perr <= '0';
-							end if;
-							s <= stopbit;
+						maj_cnt <= 0;
+						if bit_idx < BITWIDTH - 1 then
+							bit_idx <= bit_idx + 1;
+							s <= databit;
+						else
+							s <= paritybit;
 						end if;
+					end if;
+
+				when paritybit =>
+
+					if smp_idx >= LO and smp_idx <= HI then
+						if data_in = '1' and maj_cnt < MAJVOTES then 
+							maj_cnt <= maj_cnt + 1;	/* count ones in voting window */
+						end if;
+					elsif smp_idx > HI then -- checking bit value after voting window
+						if maj_cnt >= (MAJVOTES + 1) / 2 then  /* decide value by majority */
+							par_bit <= '1';
+						else
+							par_bit <= '0';
+						end if;
+					end if;
+					if smp_idx < SMP_PER_BIT - 1 then
+						smp_idx <= smp_idx + 1;
+					else /* done sampling */
+						smp_idx <= 0;
+						maj_cnt <= 0;
+						if  par_bit /= par(data_out) and pen = '1' then /* check for parity error */
+							perr <= '1';
+						else
+							perr <= '0';
+						end if;
+						s <= stopbit;
 					end if;
 
 				when stopbit =>
-					if clk_cnt < CLK_PER_SMP - 1 then
-						clk_cnt <= clk_cnt + 1;
-					else
-						clk_cnt <= 0;
-						if smp_idx < SMP_PER_BIT - 1 then
-							smp_idx <= smp_idx + 1;
-							if smp_idx = SMP_PER_BIT / 2 and data_in = '0' then
-								/* false stop: middle sample low */
-								s <= idle;
-							end if;
-						else /* done sampling */
-							smp_idx <= 0;
-							dout <= data_out; /* put data_out */
-							data_valid <= '1';
+					if smp_idx < SMP_PER_BIT - 1 then
+						smp_idx <= smp_idx + 1;
+						if smp_idx = SMP_PER_BIT / 2 and data_in = '0' then
+							/* false stop: middle sample low */
 							s <= idle;
 						end if;
+					else /* done sampling */
+						smp_idx <= 0;
+						dout <= data_out; /* put data_out */
+						data_valid <= '1';
+						s <= idle;
 					end if;
 				/*
 					* TODO: decide if the 'flush' state is necessary,
