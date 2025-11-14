@@ -76,9 +76,7 @@ begin
 		end procedure;
 	begin
 		if rst = SYSRESET then
-			flush;
-			s <= idle;
-			flush;
+			s <= flush;
 		elsif rising_edge(baud_tick) then
 			data_valid <= '0'; /* default */
 			case s is
@@ -114,7 +112,7 @@ begin
 						smp_idx <= smp_idx + 1;
 					else /* done sampling */
 						smp_idx <= 0;
-						/* decide value by majority: (MAJVOTES+1)/2 */
+						/* decide value by majority */
 						if maj_cnt >= (MAJVOTES + 1) / 2 then
 							data_out <= data_out(BITWIDTH - 2 downto 0) & '1';
 						else
@@ -130,13 +128,14 @@ begin
 					end if;
 
 				when paritybit =>
-
 					if smp_idx >= LO and smp_idx <= HI then
 						if data_in = '1' and maj_cnt < MAJVOTES then 
-							maj_cnt <= maj_cnt + 1;	/* count ones in voting window */
+							maj_cnt <= maj_cnt + 1;
 						end if;
-					elsif smp_idx = HI + 1 then -- checking bit value after voting window (only once)
-						if maj_cnt >= (MAJVOTES + 1) / 2 then  /* decide value by majority */
+					/* check bit after voting window */
+					elsif smp_idx = HI + 1 then
+						/* decide by majority */
+						if maj_cnt >= (MAJVOTES + 1) / 2 then 
 							par_bit <= '1';
 						else
 							par_bit <= '0';
@@ -147,7 +146,7 @@ begin
 					else /* done sampling */
 						smp_idx <= 0;
 						maj_cnt <= 0;
-						if  par_bit /= par(data_out) and pen = '1' then /* check for parity error */
+						if  par_bit /= par(data_out) and pen = '1' then
 							perr <= '1';
 						else
 							perr <= '0';
@@ -164,15 +163,14 @@ begin
 						end if;
 					else /* done sampling */
 						smp_idx <= 0;
-						dout <= data_out; /* put data_out */
+						dout <= data_out; /* put data out */
 						data_valid <= '1';
 						s <= idle;
 					end if;
-				/*
-					* TODO: decide if the 'flush' state is necessary,
-					* it may be used in the tx module.
-					*/
-				when flush =>
+
+				/* flush registers and return to idle */
+				when flush => 
+					flush;
 					s <= idle;
 			end case;
 		end if;

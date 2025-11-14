@@ -8,8 +8,6 @@ package pkg is
 	constant BAUDRATE: positive := 9600; /* B/s */
 	constant SMP_PER_BIT: positive := 8; /* oversamples per bit */
 	constant SYS_CLK_FRQ: positive := 50; /* MHz */
-	constant CLK_PER_BIT: positive := SYS_CLK_FRQ * 1_000_000 / BAUDRATE;
-	constant CLK_PER_SMP: positive := CLK_PER_BIT / SMP_PER_BIT;
 	
 	type state is (idle, startbit, databit, paritybit, stopbit, flush);
 	type parity is (none, even, odd);

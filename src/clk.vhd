@@ -14,7 +14,7 @@ entity baud_clock is
 end entity;
 
 architecture rtl of baud_clock is
-	constant DIV: positive := 1_000_000 * SYS_CLK_FRQ / (BAUDRATE * 8);
+	constant DIV: positive := 1_000_000*SYS_CLK_FRQ / (BAUDRATE * SMP_PER_BIT);
 	signal i: natural range 0 to DIV - 1 := 0;
 	signal clk_out: std_logic := '0';
 begin
