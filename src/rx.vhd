@@ -51,7 +51,6 @@ architecture rtl of rx is
 
 	signal data_in: std_logic := '0';
 	signal data_out: std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0');
-	signal clk_cnt: natural range 0 to CLK_PER_SMP - 1 := 0;
 	signal smp_idx: natural range 0 to SMP_PER_BIT - 1 := 0;
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
 	signal maj_cnt: natural range 0 to MAJVOTES := 0;
@@ -71,7 +70,6 @@ begin
 	control: process(baud_tick, rst)
 		/* flush: clear registers */
 		procedure flush is begin
-			clk_cnt <= 0;
 			smp_idx <= 0;
 			bit_idx <= 0;
 			maj_cnt <= 0;
@@ -86,7 +84,6 @@ begin
 			case s is
 				when idle =>
 					if data_in = '0' then /* line low */
-						clk_cnt <= 0;
 						smp_idx <= 0;
 						maj_cnt <= 0;
 						s <= startbit;
@@ -138,7 +135,7 @@ begin
 						if data_in = '1' and maj_cnt < MAJVOTES then 
 							maj_cnt <= maj_cnt + 1;	/* count ones in voting window */
 						end if;
-					elsif smp_idx > HI then -- checking bit value after voting window
+					elsif smp_idx = HI + 1 then -- checking bit value after voting window (only once)
 						if maj_cnt >= (MAJVOTES + 1) / 2 then  /* decide value by majority */
 							par_bit <= '1';
 						else
