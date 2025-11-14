@@ -44,8 +44,8 @@ architecture rtl of rx is
 	constant MAJVOTES: positive := 5;
 	
 	/* voting window */
-	constant LO: integer := SMP_PER_BIT / 2 - MAJVOTES / 2;
-	constant HI: integer := SMP_PER_BIT / 2 + MAJVOTES / 2;
+	constant LO: integer := SMP_PER_BIT / 2 - MAJVOTES / 2 - 1; -- -1 to account for 0 indexing 
+	constant HI: integer := SMP_PER_BIT / 2 + MAJVOTES / 2 - 1;
 
 	signal s: state := idle;
 
@@ -148,28 +148,26 @@ begin
 					if clk_cnt < CLK_PER_SMP - 1 then
 						clk_cnt <= clk_cnt + 1;
 						
-						/* count ones in voting window */
+
+					else
+						clk_cnt <= 0;
 						if smp_idx >= LO and smp_idx <= HI then
-							if data_in = '1' and maj_cnt < MAJVOTES then
-								maj_cnt <= maj_cnt + 1;
+							if data_in = '1' and maj_cnt < MAJVOTES then 
+								maj_cnt <= maj_cnt + 1;	/* count ones in voting window */
 							end if;
 						elsif smp_idx > HI then -- checking bit value after voting window
-
 							if maj_cnt >= (MAJVOTES + 1) / 2 then  /* decide value by majority */
 								par_bit <= '1';
 							else
 								par_bit <= '0';
 							end if;
 						end if;
-					else
-						clk_cnt <= 0;
 						if smp_idx < SMP_PER_BIT - 1 then
 							smp_idx <= smp_idx + 1;
 						else /* done sampling */
 							smp_idx <= 0;
 							maj_cnt <= 0;
-							/* decide value by majority */
-							if  par_bit /= par(data_out) and pen = '1' then
+							if  par_bit /= par(data_out) and pen = '1' then /* check for parity error */
 								perr <= '1';
 							else
 								perr <= '0';
