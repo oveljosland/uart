@@ -19,7 +19,6 @@ use work.pkg.all;
 
 entity utx is
 	port (
-		clk: in std_logic;
 		byte_in: in std_logic_vector(BITWIDTH - 1 downto 0);
 		busy: out std_logic;
 		serial_out: out std_logic
