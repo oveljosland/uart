@@ -88,17 +88,23 @@ begin
 					end if;
 
 				when startbit =>
+					if smp_idx >= LO and smp_idx <= HI then
+						if data_in = '1' and maj_cnt < MAJVOTES then
+							maj_cnt <= maj_cnt + 1;
+						end if;
+					end if;
 					if smp_idx < SMP_PER_BIT - 1 then
 						smp_idx <= smp_idx + 1;
-						if smp_idx = SMP_PER_BIT / 2 and data_in = '1' then
-							/* false start: middle sample high */
+					else /* done sampling */
+						if maj_cnt >= (MAJVOTES + 1) / 2 then
+							/* false start: majority high */
 							s <= idle;
+						else
+							smp_idx <= 0;
+							maj_cnt <= 0;
+							bit_idx <= 0;
+							s <= databit;
 						end if;
-					else /* got startbit */
-						smp_idx <= 0;
-						maj_cnt <= 0;
-						bit_idx <= 0;
-						s <= databit;
 					end if;
 				when databit =>
 						/* count ones in voting window */
