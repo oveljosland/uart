@@ -22,7 +22,6 @@ use work.pkg.all;
 
 entity rx is
 	port (
-		clk: in std_logic; /* system clock */
 		rst: in std_logic; /* reset defined in pkg.vhd */
 		din: in std_logic; /* data_in in */
 		pen: in std_logic; /* parity enable */
@@ -49,7 +48,6 @@ architecture rtl of rx is
 
 	signal s: state := idle;
 
-	signal data_in: std_logic := '0';
 	signal data_out: std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0');
 	signal smp_idx: natural range 0 to SMP_PER_BIT - 1 := 0;
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
@@ -59,15 +57,9 @@ architecture rtl of rx is
 
 
 begin
-	/* read:  read 'din' into 'data_in' register */
-	read: process(clk) begin
-		if rising_edge(clk) then
-			data_in <= din;
-		end if;
-	end process;
 
 	/* control:  control receiver states */
-	control: process(baud_tick, rst)
+	control: process(baud_tick, rst, din) is
 		/* flush: clear registers */
 		procedure flush is begin
 			smp_idx <= 0;
@@ -81,7 +73,7 @@ begin
 			data_valid <= '0'; /* default */
 			case s is
 				when idle =>
-					if data_in = '0' then /* line low */
+					if din = '0' then /* line low */
 						smp_idx <= 1; -- already sampled first bit
 						maj_cnt <= 0;
 						s <= startbit;
@@ -89,7 +81,7 @@ begin
 
 				when startbit =>
 					if smp_idx >= LO and smp_idx <= HI then
-						if data_in = '1' and maj_cnt < MAJVOTES then
+						if din = '1' and maj_cnt < MAJVOTES then
 							maj_cnt <= maj_cnt + 1;
 						end if;
 					end if;
@@ -109,7 +101,7 @@ begin
 				when databit =>
 						/* count ones in voting window */
 					if smp_idx >= LO and smp_idx <= HI then
-						if data_in = '1' and maj_cnt < MAJVOTES then
+						if din = '1' and maj_cnt < MAJVOTES then
 							maj_cnt <= maj_cnt + 1;
 						end if;
 					end if;
@@ -135,7 +127,7 @@ begin
 
 				when paritybit =>
 					if smp_idx >= LO and smp_idx <= HI then
-						if data_in = '1' and maj_cnt < MAJVOTES then 
+						if din = '1' and maj_cnt < MAJVOTES then 
 							maj_cnt <= maj_cnt + 1;
 						end if;
 					/* check bit after voting window */

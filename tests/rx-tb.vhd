@@ -42,7 +42,6 @@ architecture simulation of rx_tb is
             );
         urx: entity work.rx
             port map (
-                clk => clk, 
                 din => serial_in,
                 data_valid => data_valid,
                 dout => dout,
