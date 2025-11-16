@@ -163,15 +163,16 @@ begin
 				when stopbit =>
 					if smp_idx < SMP_PER_BIT - 1 then
 						smp_idx <= smp_idx + 1;
-						if smp_idx = SMP_PER_BIT / 2 and data_in = '0' then
-							/* false stop: middle sample low */
+					else /* done sampling */
+						if maj_cnt >= (MAJVOTES + 1) / 2 then
+							/* stop bit must be high */
+							s <= flush; /* framing error, discard data */
+						else
+							smp_idx <= 0;
+							dout <= data_out; /* put data out */
+							data_valid <= '1';
 							s <= idle;
 						end if;
-					else /* done sampling */
-						smp_idx <= 0;
-						dout <= data_out; /* put data out */
-						data_valid <= '1';
-						s <= idle;
 					end if;
 
 				/* flush registers and return to idle */
