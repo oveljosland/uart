@@ -82,7 +82,7 @@ begin
 			case s is
 				when idle =>
 					if data_in = '0' then /* line low */
-						smp_idx <= 0;
+						smp_idx <= 1; -- already sampled first bit
 						maj_cnt <= 0;
 						s <= startbit;
 					end if;
