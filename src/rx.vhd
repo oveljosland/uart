@@ -22,7 +22,6 @@ use work.pkg.all;
 
 entity rx is
 	port (
-		clk: in std_logic; /* system clock */
 		rst: in std_logic; /* reset defined in pkg.vhd */
 		din: in std_logic; /* data_in in */
 		pen: in std_logic; /* parity enable */
@@ -49,7 +48,6 @@ architecture rtl of rx is
 
 	signal s: state := idle;
 
-	signal data_in: std_logic := '0';
 	signal data_out: std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0');
 	signal smp_idx: natural range 0 to SMP_PER_BIT - 1 := 0;
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
@@ -59,15 +57,9 @@ architecture rtl of rx is
 
 
 begin
-	/* read:  read 'din' into 'data_in' register */
-	read: process(clk) begin
-		if rising_edge(clk) then
-			data_in <= din;
-		end if;
-	end process;
 
 	/* control:  control receiver states */
-	control: process(baud_tick, rst)
+	control: process(baud_tick, rst, din) is
 		/* flush: clear registers */
 		procedure flush is begin
 			smp_idx <= 0;
@@ -81,29 +73,35 @@ begin
 			data_valid <= '0'; /* default */
 			case s is
 				when idle =>
-					if data_in = '0' then /* line low */
-						smp_idx <= 0;
+					if din = '0' then /* line low */
+						smp_idx <= 1; -- already sampled first bit
 						maj_cnt <= 0;
 						s <= startbit;
 					end if;
 
 				when startbit =>
+					if smp_idx >= LO and smp_idx <= HI then
+						if din = '1' and maj_cnt < MAJVOTES then
+							maj_cnt <= maj_cnt + 1;
+						end if;
+					end if;
 					if smp_idx < SMP_PER_BIT - 1 then
 						smp_idx <= smp_idx + 1;
-						if smp_idx = SMP_PER_BIT / 2 and data_in = '1' then
-							/* false start: middle sample high */
+					else /* done sampling */
+						if maj_cnt >= (MAJVOTES + 1) / 2 then
+							/* false start: majority high */
 							s <= idle;
+						else
+							smp_idx <= 0;
+							maj_cnt <= 0;
+							bit_idx <= 0;
+							s <= databit;
 						end if;
-					else /* got startbit */
-						smp_idx <= 0;
-						maj_cnt <= 0;
-						bit_idx <= 0;
-						s <= databit;
 					end if;
 				when databit =>
 						/* count ones in voting window */
 					if smp_idx >= LO and smp_idx <= HI then
-						if data_in = '1' and maj_cnt < MAJVOTES then
+						if din = '1' and maj_cnt < MAJVOTES then
 							maj_cnt <= maj_cnt + 1;
 						end if;
 					end if;
@@ -129,7 +127,7 @@ begin
 
 				when paritybit =>
 					if smp_idx >= LO and smp_idx <= HI then
-						if data_in = '1' and maj_cnt < MAJVOTES then 
+						if din = '1' and maj_cnt < MAJVOTES then 
 							maj_cnt <= maj_cnt + 1;
 						end if;
 					/* check bit after voting window */
@@ -157,15 +155,16 @@ begin
 				when stopbit =>
 					if smp_idx < SMP_PER_BIT - 1 then
 						smp_idx <= smp_idx + 1;
-						if smp_idx = SMP_PER_BIT / 2 and data_in = '0' then
-							/* false stop: middle sample low */
+					else /* done sampling */
+						if maj_cnt >= (MAJVOTES + 1) / 2 then
+							/* stop bit must be high */
+							s <= flush; /* framing error, discard data */
+						else
+							smp_idx <= 0;
+							dout <= data_out; /* put data out */
+							data_valid <= '1';
 							s <= idle;
 						end if;
-					else /* done sampling */
-						smp_idx <= 0;
-						dout <= data_out; /* put data out */
-						data_valid <= '1';
-						s <= idle;
 					end if;
 
 				/* flush registers and return to idle */

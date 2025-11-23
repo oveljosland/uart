@@ -61,7 +61,6 @@ begin
 
 	rx_module: entity work.rx
 		port map (
-			clk => clk,
 			rst => rst,
 			din => rx,
 			baud_tick => baud_tick,
