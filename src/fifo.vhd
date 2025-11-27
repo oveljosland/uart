@@ -28,7 +28,7 @@ architecture rtl of fifo is
 	signal rp, wp: integer := 0;
 	signal i: natural := 0;
 begin
-	rw: process(clk, rst, w, r) begin
+	rw: process(rst, w, r) begin
 		dout <= queue(rp);
 		if rst = SYSRESET then
 			rp <= 0;
@@ -46,7 +46,7 @@ begin
 		end if;
 	end process;
 
-	status: process(clk) begin
+	status: process(i) begin
 		if i = 0 then
 			empty <= '1';
 		else
