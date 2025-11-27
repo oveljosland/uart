@@ -26,9 +26,6 @@ entity top is
 		rx: in std_logic := '0'; 
 		tx: out std_logic := '0';
 
-		tf_din: in std_logic_vector(BITWIDTH - 1 downto 0); -- is never used, but needed for fifo instantiation
-
-
 		HEX0: out std_logic_vector(6 downto 0) := (others => '0');
 		HEX1: out std_logic_vector(6 downto 0) := (others => '0');
 		HEX2: out std_logic_vector(6 downto 0) := (others => '0');
@@ -63,6 +60,7 @@ architecture rtl of top is
 	/* tx fifo */
 	signal tf_empty, tf_full: std_logic;
 	signal tf_read, tf_write: std_logic := '0';
+	signal tf_din: std_logic_vector(BITWIDTH - 1 downto 0);
 	/* test: rx --> display */
 	signal test_rx_dout: std_logic_vector(BITWIDTH - 1 downto 0);
 
@@ -101,7 +99,7 @@ begin
 		);
 	display: entity work.display
 		port map (
-			char => rf_dout, -- set this to ff_dout later
+			char => rf_dout,
 			fifo_empty => rf_empty,
 			read_fifo => rf_read,
 			seg0 => HEX0,
@@ -135,7 +133,15 @@ begin
 			din => tf_din,
 			dout => tx_din,
 			empty => tf_empty,
-			full => open
+			full => tf_full
+		);
+
+	sendtotx_inst: entity work.sendtotx
+		port map (
+			clk => clk,
+			dout => tf_din,
+			fifo_full => tf_full,
+			write => tf_write
 		);
 	/* put some characters on the display */
 	display_test: process(clk, rst)
