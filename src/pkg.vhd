@@ -5,17 +5,11 @@ use ieee.numeric_std.all;
 package pkg is
 	constant SYSRESET: std_logic := '0'; /* system-wide active low */
 	constant BITWIDTH: positive := 8; /* 8-bit code set */
-	constant BAUDRATE: positive := 9600; /* B/s */
 	constant SMP_PER_BIT: positive := 8; /* oversamples per bit */
 	constant SYS_CLK_FRQ: positive := 50; /* MHz */
 	
 	type state is (idle, startbit, databit, paritybit, stopbit, flush);
 	type parity is (none, even, odd);
-
-	type list is array (integer range <>) of integer;
-	constant SUPPORTED_BAUDRATES: list := (
-		9600, 19200, 38400, 57600, 115200
-	);
 	
 	/* functions */
 	pure function par(x: std_logic_vector) return std_logic;

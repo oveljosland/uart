@@ -9,7 +9,7 @@ entity rx_tb is
 end entity;
 
 architecture simulation of rx_tb is 
-    constant CLK_PER_BIT: positive := SYS_CLK_FRQ * 1_000_000 / BAUDRATE;
+    constant CLK_PER_BIT: positive := SYS_CLK_FRQ * 1_000_000 / 100_000; -- assuming 100k baudrate for testbench   
 	constant CLK_PER_SMP: positive := CLK_PER_BIT / SMP_PER_BIT;
 
     constant CLK_PERIOD : time := 20 ns; -- Klokkeperiode (20ns = 50 Mhz)
@@ -39,7 +39,8 @@ architecture simulation of rx_tb is
             port map (
                 clk => clk,
                 rst => rst,
-                baud_tick => baud_tick
+                baud_tick => baud_tick,
+                inc_btn => '0'
             );
         urx: entity work.rx
             port map (

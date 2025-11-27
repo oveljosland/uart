@@ -21,6 +21,7 @@ entity top is
 		clk: in std_logic; /* SYS_CLK_FRQ defined in pkg */
 		rst: in std_logic; /* SYSRESET defined in pkg */
 		pen: in std_logic; /* parity enable */ 
+		inc_btn: in std_logic; /* button to increase baud rate */
 
 		rx: in std_logic := '0'; 
 		tx: out std_logic := '0';
@@ -68,7 +69,8 @@ begin
 		port map (
 			clk => clk,
 			rst => rst,
-			baud_tick => baud_tick
+			baud_tick => baud_tick,
+			inc_btn => inc_btn
 		);
 
 	rx_module: entity work.rx
@@ -114,7 +116,8 @@ begin
 			pen => pen,
 			busy => tx_busy,
 			serial_out => tx,
-			fifo_empty => tf_empty
+			fifo_empty => tf_empty,
+			rst => rst
 		);
 	
 	tx_fifo: entity work.fifo
