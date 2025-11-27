@@ -7,46 +7,72 @@ use work.pkg.all;
 
 entity display is
 	port (
+		clk: in std_logic;
 		char: in std_logic_vector(BITWIDTH - 1 downto 0);
-		seg: out std_logic_vector(6 downto 0)
+		fifo_empty: in std_logic;
+		seg0, seg1, seg2, seg3, seg4, seg5: out std_logic_vector(6 downto 0);
+		read_fifo: out std_logic := '0'
 	);
 end entity;
 
 architecture rtl of display is
+function char_to_sevenseg(c : std_logic_vector(7 downto 0))
+    return std_logic_vector is
+    variable a : integer;
 begin
+    -- ASCII ’0’..’9’
+    if c >= x"30" and c <= x"39" then
+        a := to_integer(unsigned(c)) - 48;
 
-	/* putchar:  put character onto the display */
-	putchar: process(char)
-		variable a: integer;
+    -- ASCII ’A’..’F’
+    elsif c >= x"41" and c <= x"46" then
+        a := to_integer(unsigned(c)) - 55;
+
+    -- ASCII ’a’..’f’
+    elsif c >= x"61" and c <= x"66" then
+        a := to_integer(unsigned(c)) - 87;
+
+    else
+        a := 16;  -- invalid
+    end if;
+
+    case a is
+        when 0  => return "1000000"; -- 0
+        when 1  => return "1111001"; -- 1
+        when 2  => return "0100100"; -- 2
+        when 3  => return "0110000"; -- 3
+        when 4  => return "0011001"; -- 4
+        when 5  => return "0010010"; -- 5
+        when 6  => return "0000010"; -- 6
+        when 7  => return "1111000"; -- 7
+        when 8  => return "0000000"; -- 8
+        when 9  => return "0010000"; -- 9
+        when 10 => return "0001000"; -- A
+        when 11 => return "0000011"; -- b
+        when 12 => return "1000110"; -- C
+        when 13 => return "0100001"; -- d
+        when 14 => return "0000110"; -- E
+        when 15 => return "0001110"; -- F
+        when others => return "1111111"; -- blank/error
+    end case;
+end function;
+
+begin
+	process (fifo_empty, clk, char) is
 	begin
-		if char >= x"30" and char <= x"39" then    /* '0'..'9' */
-			a := to_integer(unsigned(char)) - 48;
-		elsif char >= x"41" and char <= x"46" then /* 'A'..'F' */
-			a := to_integer(unsigned(char)) - 55;  /* 'A' = 10 */
-		elsif char >= x"61" and char <= x"66" then /* 'a'..'f' */
-			a := to_integer(unsigned(char)) - 87;  /* 'a' = 10 */
-		else
-			a := 16;
+		if rising_edge(clk) then
+			if fifo_empty = '0' then -- if fifo not empty add character and shift
+				read_fifo <= '1';
+				seg0 <= char_to_sevenseg(char);
+				seg1 <= seg0;
+				seg2 <= seg1;
+				seg3 <= seg2;
+				seg4 <= seg3;
+				seg5 <= seg4;
+			else
+				read_fifo <= '0';
+			end if;
 		end if;
-
-		case a is
-			when 0  => seg <= "1000000"; /* 0 */
-			when 1  => seg <= "1111001"; /* 1 */
-			when 2  => seg <= "0100100"; /* 2 */
-			when 3  => seg <= "0110000"; /* 3 */
-			when 4  => seg <= "0011001"; /* 4 */
-			when 5  => seg <= "0010010"; /* 5 */
-			when 6  => seg <= "0000010"; /* 6 */
-			when 7  => seg <= "1111000"; /* 7 */
-			when 8  => seg <= "0000000"; /* 8 */
-			when 9  => seg <= "0010000"; /* 9 */
-			when 10 => seg <= "0001000"; /* A */
-			when 11 => seg <= "0000011"; /* b */
-			when 12 => seg <= "1000110"; /* C */
-			when 13 => seg <= "0100001"; /* d */
-			when 14 => seg <= "0000110"; /* E */
-			when 15 => seg <= "0001110"; /* F */
-			when others => seg <= "1111111";
-		end case;
 	end process;
+
 end architecture;

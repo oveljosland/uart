@@ -32,6 +32,7 @@ architecture simulation of rx_tb is
     signal flagtemp : std_logic := '0'; -- for testing purposes only
     signal statustemp : std_logic_vector(7 downto 0):=(others=>'0'); -- for testing purposes only
     signal douttemp : std_logic_vector(BITWIDTH-1 downto 0):=(others=>'0'); -- for testing purposes only
+    signal queue_content: std_logic_vector(BITWIDTH - 1 downto 0) := (others => '0');
     begin
         clk <= not clk after CLK_PERIOD/2; -- Generer 50 MHz klokke ved å toggle hver periode/2 (10 ns)
         clkgen: entity work.baud_clock
@@ -50,13 +51,24 @@ architecture simulation of rx_tb is
 		pen => pen,
         perr => perr,
 
-
         flagtemp => flagtemp,
         statustemp => statustemp,
         douttemp => douttemp,
         par_bit_temp => par_bit_temp
             );
 
+        fifo: entity work.fifo
+            port map (
+                clk => clk,
+                rst => rst,
+                r => '0',
+                w => data_valid,
+                din => dout,
+                dout => open,
+                empty => open,
+                full => open,
+                rec_byte => queue_content
+            );
         stim: process 
             procedure send_bit(b : std_logic) is -- send a bit on serial_in
             begin

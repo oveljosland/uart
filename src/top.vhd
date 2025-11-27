@@ -27,7 +27,10 @@ entity top is
 
 		HEX0: out std_logic_vector(6 downto 0) := (others => '0');
 		HEX1: out std_logic_vector(6 downto 0) := (others => '0');
-		HEX2: out std_logic_vector(6 downto 0) := (others => '0')
+		HEX2: out std_logic_vector(6 downto 0) := (others => '0');
+		HEX3: out std_logic_vector(6 downto 0) := (others => '0');
+		HEX4: out std_logic_vector(6 downto 0) := (others => '0');
+		HEX5: out std_logic_vector(6 downto 0) := (others => '0')
 	);
 end entity;
 
@@ -84,7 +87,14 @@ begin
 	display: entity work.display
 		port map (
 			char => test_rx_dout, -- set this to ff_dout later
-			seg => HEX0
+			fifo_empty => ff_empty,
+			seg0 => HEX0,
+			seg1 => HEX1,
+			seg2 => HEX2,
+			seg3 => HEX3,
+			seg4 => HEX4,
+			seg5 => HEX5,
+			clk => clk
 		);
 	
 	/* put some characters on the display */
