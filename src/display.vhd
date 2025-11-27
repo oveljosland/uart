@@ -8,6 +8,7 @@ use work.pkg.all;
 entity display is
 	port (
 		clk: in std_logic;
+		rst: in std_logic;
 		char: in std_logic_vector(BITWIDTH - 1 downto 0);
 		fifo_empty: in std_logic;
 		seg0, seg1, seg2, seg3, seg4, seg5: out std_logic_vector(6 downto 0);
@@ -60,6 +61,15 @@ end function;
 begin
 	process (fifo_empty, clk, char) is
 	begin
+		if rst = SYSRESET then
+			seg0 <= (others => '1');
+			seg1 <= (others => '1');
+			seg2 <= (others => '1');
+			seg3 <= (others => '1');
+			seg4 <= (others => '1');
+			seg5 <= (others => '1');
+			read_fifo <= '0';
+		end if;
 		if rising_edge(clk) then
 			if fifo_empty = '0' then -- if fifo not empty add character and shift
 				read_fifo <= '1';

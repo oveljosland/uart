@@ -94,7 +94,8 @@ begin
 			seg3 => HEX3,
 			seg4 => HEX4,
 			seg5 => HEX5,
-			clk => clk
+			clk => clk,
+			rst => rst
 		);
 	
 	/* put some characters on the display */
