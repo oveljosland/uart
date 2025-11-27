@@ -39,18 +39,15 @@ begin
         r_d <= '0';
         w_d <= '0';
     elsif rising_edge(clk) then
-        -- Forsink forrige verdi
         r_d <= r;
         w_d <= w;
 
-        -- Skriv kun på stigende kant
         if w = '1' and w_d = '0' and i < LEN then
             queue(wp) <= din;
             wp <= (wp + 1) mod LEN;
             i <= i + 1;
         end if;
 
-        -- Les kun på stigende kant
         if r = '1' and r_d = '0' and i > 0 then
             rp <= (rp + 1) mod LEN;
             i <= i - 1;
