@@ -25,6 +25,9 @@ entity top is
 		rx: in std_logic := '0'; 
 		tx: out std_logic := '0';
 
+		tf_din: in std_logic_vector(BITWIDTH - 1 downto 0); -- is never used, but needed for fifo instantiation
+
+
 		HEX0: out std_logic_vector(6 downto 0) := (others => '0');
 		HEX1: out std_logic_vector(6 downto 0) := (others => '0');
 		HEX2: out std_logic_vector(6 downto 0) := (others => '0');
@@ -57,8 +60,6 @@ architecture rtl of top is
 	/* tx fifo */
 	signal tf_empty, tf_full: std_logic;
 	signal tf_read, tf_write: std_logic := '0';
-	signal tf_din: std_logic_vector(BITWIDTH - 1 downto 0); -- is never used, but needed for fifo instantiation
-
 	/* test: rx --> display */
 	signal test_rx_dout: std_logic_vector(BITWIDTH - 1 downto 0);
 
