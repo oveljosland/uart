@@ -22,6 +22,7 @@ entity utx is
 		byte_in: in std_logic_vector(BITWIDTH - 1 downto 0);
 		baud_tick: in std_logic;
 		pen: in std_logic; /* parity enable */
+		rst: in std_logic;
 		busy: out std_logic:= '0';
 		serial_out: out std_logic;
 		fifo_empty: in std_logic
@@ -35,7 +36,11 @@ architecture rtl of utx is
 begin
 	send_message: process(baud_tick, byte_in, fifo_empty)
 	begin
-		if rising_edge(baud_tick) then
+		if rst = SYSRESET then
+			serial_out <= '1'; -- idle state
+			busy <= '0';
+			idx <= 0;
+		elsif rising_edge(baud_tick) then
 			if busy = '1' then
 				--send bits
 				if idx < (BITWIDTH + 3) * SMP_PER_BIT then
