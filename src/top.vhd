@@ -40,17 +40,24 @@ architecture rtl of top is
 
 	signal baud_tick: std_logic;
 
-	/* rx tx io */
+	/* rx io */
 	signal perr: std_logic;
 	signal rx_dout: std_logic_vector(BITWIDTH - 1 downto 0);
+	/* tx io */
 	signal tx_din: std_logic_vector(BITWIDTH - 1 downto 0);
 	signal tx_busy: std_logic;
+
 	
 	/* rx fifo */
-	signal ff_din: std_logic_vector(BITWIDTH - 1 downto 0);
-	signal ff_dout: std_logic_vector(BITWIDTH - 1 downto 0);
-	signal ff_read, ff_write: std_logic := '0'; /* r/w enable */
-	signal ff_empty, ff_full: std_logic := '0'; /* stauts flags */
+	signal rf_din: std_logic_vector(BITWIDTH - 1 downto 0);
+	signal rf_dout: std_logic_vector(BITWIDTH - 1 downto 0);
+	signal rf_write, rf_read: std_logic := '0'; /* r/w enable */
+	signal rf_empty, rf_full: std_logic; /* stauts flags */
+
+	/* tx fifo */
+	signal tf_empty, tf_full: std_logic;
+	signal tf_read, tf_write: std_logic := '0';
+	signal tf_din: std_logic_vector(BITWIDTH - 1 downto 0); -- is never used, but needed for fifo instantiation
 
 	/* test: rx --> display */
 	signal test_rx_dout: std_logic_vector(BITWIDTH - 1 downto 0);
@@ -78,17 +85,18 @@ begin
 		port map (
 			clk => clk,
 			rst => rst,
-			r => ff_read,
+			r => rf_read,
 			w => rx_dv,
 			din => rx_dout,
-			dout => ff_dout,
-			empty => ff_empty,
-			full => ff_full
+			dout => rf_dout,
+			empty => rf_empty,
+			full => open
 		);
 	display: entity work.display
 		port map (
-			char => test_rx_dout, -- set this to ff_dout later
-			fifo_empty => ff_empty,
+			char => rf_dout, -- set this to ff_dout later
+			fifo_empty => rf_empty,
+			read_fifo => rf_read,
 			seg0 => HEX0,
 			seg1 => HEX1,
 			seg2 => HEX2,
@@ -100,12 +108,12 @@ begin
 		);
 	tx_module: entity work.utx
 		port map (
-			byte_in => ff_dout,
+			byte_in => tx_din,
 			baud_tick => baud_tick,
 			pen => pen,
 			busy => tx_busy,
 			serial_out => tx,
-			fifo_empty => ff_empty
+			fifo_empty => tf_empty
 		);
 	
 	tx_fifo: entity work.fifo
@@ -113,10 +121,10 @@ begin
 			clk => clk,
 			rst => rst,
 			r => tx_busy,
-			w => open,
-			din => tx_din,
-			dout => open,
-			empty => open,
+			w => tf_write,
+			din => tf_din,
+			dout => tx_din,
+			empty => tf_empty,
 			full => open
 		);
 	/* put some characters on the display */
