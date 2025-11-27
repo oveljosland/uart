@@ -17,9 +17,9 @@ entity baud_clock is
 end entity;
 
 architecture rtl of baud_clock is
-    constant DIV : positive := 1_000_000 * SYS_CLK_FRQ / SMP_PER_BIT;
+    signal DIV : positive := 1_000_000 * SYS_CLK_FRQ / (SMP_PER_BIT*baudrate)-1;
 
-    signal i        : natural range 0 to DIV - 1 := 0;
+    signal i        : natural range 0 to 1_000_000 * SYS_CLK_FRQ / (SMP_PER_BIT*1_000_000)-1 := 0;
     signal clk_out  : std_logic := '0';
 
     -- debounce & edge detection
@@ -58,9 +58,12 @@ begin
             -- increment baud rate on rising edge of debounced button
             if btn_clean = '1' and btn_prev = '0' then
 				baud_change <= '1';
+				DIV <= 1_000_000 * SYS_CLK_FRQ / (SMP_PER_BIT*baudrate)-1;
                 if baudrate + 100_000 > 1_000_000 then
+					DIV <= 1_000_000 * SYS_CLK_FRQ / (SMP_PER_BIT*100_000)-1;
                     baudrate <= 100_000; -- loop back
                 else
+					DIV <= 1_000_000 * SYS_CLK_FRQ / (SMP_PER_BIT*(baudrate+100_000))-1;
                     baudrate <= baudrate + 100_000;
                 end if;
 			else
@@ -76,7 +79,7 @@ begin
             i <= 0;
             clk_out <= '0';
         elsif rising_edge(clk) then
-            if i = DIV / baudrate - 1 then
+            if i = DIV then
                 i <= 0;
                 clk_out <= not clk_out; -- square wave
             else
