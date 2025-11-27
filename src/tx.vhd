@@ -23,55 +23,51 @@ entity utx is
 		baud_tick: in std_logic;
 		pen: in std_logic; /* parity enable */
 		busy: out std_logic:= '0';
-		serial_out: out std_logic
+		serial_out: out std_logic;
+		fifo_empty: in std_logic
 	);
 end entity;
 
 architecture rtl of utx is
-	signal s: state := idle;
-	type array_t is array (0 to 15) of std_logic_vector(BITWIDTH-1 downto 0);
-	signal message : array_t := (
-    x"48", -- H
-    x"45", -- E
-    x"4C", -- L
-    x"4C", -- L
-    x"4F", -- O
-    x"20", -- space
-    x"57", -- W
-    x"4F", -- O
-    x"52", -- R
-    x"4C", -- L
-    x"44", -- D
-    x"20", -- space
-    x"31", -- 1
-    x"32", -- 2
-    x"33", -- 3
-    x"21"  -- !
-);
-signal msg_idx : integer range 0 to 15 := 0;
-signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
+	signal msg: std_logic_vector(BITWIDTH - 1 downto 0);
+	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
+	signal idx : natural range 0 to (BITWIDTH+3)*SMP_PER_BIT - 1 := 0; -- start + data + parity + stop
 begin
 	send_message: process
 	begin
-		serial_out <= '1'; /* idle */
-		wait until rising_edge(baud_tick);
-		for msg_idx in 0 to 15 loop
-			/* start bit */
-			serial_out <= '0';
-			wait until rising_edge(baud_tick);
-			/* data bits */
-			for bit_idx in 0 to BITWIDTH - 1 loop
-				serial_out <= message(msg_idx)(bit_idx);
-				wait until rising_edge(baud_tick);
-			end loop;
-			if pen = '1' then
-				/* parity bit */
-				serial_out <= par(message(msg_idx)); 
-				wait until rising_edge(baud_tick);
+		if rising_edge(baud_tick) then
+			if busy = '1' then
+				--send bits
+				if idx < (BITWIDTH + 3) * SMP_PER_BIT then
+					--start bit
+					if idx < SMP_PER_BIT then
+						serial_out <= '0';
+					--data bits
+					elsif idx < (BITWIDTH + 1) * SMP_PER_BIT then
+						serial_out <= msg((idx - SMP_PER_BIT) / SMP_PER_BIT);
+					--parity bit
+					elsif idx < (BITWIDTH + 2) * SMP_PER_BIT then
+						serial_out <= par(msg);
+					--stop bit
+					elsif idx < (BITWIDTH + 3) * SMP_PER_BIT-1 then
+						serial_out <= '1';
+					-- last stop bit sample and tell that we are done
+					elsif idx = (BITWIDTH + 3) * SMP_PER_BIT-1 then
+						serial_out <= '1';
+						busy <= '0';
+					end if;
+					idx <= idx + 1;
+				else
+					idx <= 0;
+				end if;
+			elsif busy = '0' then
+				if fifo_empty = '0' then
+					msg <= byte_in;
+					busy <= '1';
+					--send byte
+				else 
+				end if;
 			end if;
-			/* stop bit */
-			serial_out <= '1';
-			wait until rising_edge(baud_tick);
-		end loop;
+		end if;
 	end process;
 end architecture;

@@ -44,6 +44,7 @@ architecture rtl of top is
 	signal perr: std_logic;
 	signal rx_dout: std_logic_vector(BITWIDTH - 1 downto 0);
 	signal tx_din: std_logic_vector(BITWIDTH - 1 downto 0);
+	signal tx_busy: std_logic;
 	
 	/* rx fifo */
 	signal ff_din: std_logic_vector(BITWIDTH - 1 downto 0);
@@ -97,7 +98,27 @@ begin
 			clk => clk,
 			rst => rst
 		);
+	tx_module: entity work.utx
+		port map (
+			byte_in => ff_dout,
+			baud_tick => baud_tick,
+			pen => pen,
+			busy => tx_busy,
+			serial_out => tx,
+			fifo_empty => ff_empty
+		);
 	
+	tx_fifo: entity work.fifo
+		port map (
+			clk => clk,
+			rst => rst,
+			r => tx_busy,
+			w => open,
+			din => tx_din,
+			dout => open,
+			empty => open,
+			full => open
+		);
 	/* put some characters on the display */
 	display_test: process(clk, rst)
 		type string is array(0 to 15) of std_logic_vector(7 downto 0);
