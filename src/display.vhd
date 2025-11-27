@@ -69,8 +69,7 @@ begin
 			seg4 <= (others => '1');
 			seg5 <= (others => '1');
 			read_fifo <= '0';
-		end if;
-		if rising_edge(clk) then
+		elsif rising_edge(clk) then
 			if fifo_empty = '0' then -- if fifo not empty add character and shift
 				read_fifo <= '1';
 				seg0 <= char_to_sevenseg(char);

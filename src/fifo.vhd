@@ -27,25 +27,36 @@ architecture rtl of fifo is
 	signal queue: array_t;
 	signal rp, wp: integer := 0;
 	signal i: natural := 0;
+	signal r_d, w_d: std_logic := '0'; -- delayed read and write signals
 begin
-	rw: process(rst, w, r) begin
-		dout <= queue(rp);
-		if rst = SYSRESET then
-			rp <= 0;
-			wp <= 0;
-			i <= 0;
-		end if;
-		if rising_edge(w) and i < LEN then /* there is room */
-			queue(wp) <= din;
-			wp <= (wp + 1) mod LEN;
-			i <= i + 1;
-		end if;
-		if rising_edge(r) and i > 0 then
-			rp <= (rp + 1) mod LEN;
-			i <= i - 1;
-		end if;
-	end process;
 
+rw: process(clk, rst)
+begin
+    if rst = SYSRESET then
+        rp <= 0;
+        wp <= 0;
+        i <= 0;
+        r_d <= '0';
+        w_d <= '0';
+    elsif rising_edge(clk) then
+        -- Forsink forrige verdi
+        r_d <= r;
+        w_d <= w;
+
+        -- Skriv kun på stigende kant
+        if w = '1' and w_d = '0' and i < LEN then
+            queue(wp) <= din;
+            wp <= (wp + 1) mod LEN;
+            i <= i + 1;
+        end if;
+
+        -- Les kun på stigende kant
+        if r = '1' and r_d = '0' and i > 0 then
+            rp <= (rp + 1) mod LEN;
+            i <= i - 1;
+        end if;
+    end if;
+end process;
 	status: process(i) begin
 		if i = 0 then
 			empty <= '1';

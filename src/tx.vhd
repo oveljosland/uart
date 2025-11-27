@@ -33,7 +33,7 @@ architecture rtl of utx is
 	signal bit_idx: natural range 0 to BITWIDTH - 1 := 0;
 	signal idx : natural range 0 to (BITWIDTH+3)*SMP_PER_BIT - 1 := 0; -- start + data + parity + stop
 begin
-	send_message: process
+	send_message: process(baud_tick, byte_in, fifo_empty)
 	begin
 		if rising_edge(baud_tick) then
 			if busy = '1' then
