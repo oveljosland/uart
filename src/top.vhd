@@ -43,6 +43,8 @@ architecture rtl of top is
 	signal tx_dv: std_logic;
 
 	signal baud_tick: std_logic;
+	signal baud_change: std_logic;
+	signal baudrate: positive range 100_000 to 1_000_000 := 100_000;
 
 	/* rx io */
 	signal perr: std_logic;
@@ -70,7 +72,9 @@ begin
 			clk => clk,
 			rst => rst,
 			baud_tick => baud_tick,
-			inc_btn => inc_btn
+			inc_btn => inc_btn,
+			baud_change => baud_change,
+			baudrate => baudrate
 		);
 
 	rx_module: entity work.rx
@@ -107,7 +111,9 @@ begin
 			seg4 => HEX4,
 			seg5 => HEX5,
 			clk => clk,
-			rst => rst
+			rst => rst,
+			baud_change => baud_change,
+			baud_rate => baudrate
 		);
 	tx_module: entity work.utx
 		port map (

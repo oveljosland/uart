@@ -10,7 +10,9 @@ entity baud_clock is
         clk        : in  std_logic;
         rst        : in  std_logic;
         inc_btn    : in  std_logic;  -- button to increase baud
-        baud_tick  : out std_logic
+        baud_tick  : out std_logic;
+		baud_change: out std_logic := '0'; -- for display
+		baudrate : out positive range 100_000 to 1_000_000 := 100_000
     );
 end entity;
 
@@ -19,7 +21,6 @@ architecture rtl of baud_clock is
 
     signal i        : natural range 0 to DIV - 1 := 0;
     signal clk_out  : std_logic := '0';
-    signal baudrate : positive range 100_000 to 1_000_000 := 100_000;
 
     -- debounce & edge detection
     signal btn_sync, btn_prev : std_logic := '0';
@@ -56,11 +57,14 @@ begin
 
             -- increment baud rate on rising edge of debounced button
             if btn_clean = '1' and btn_prev = '0' then
+				baud_change <= '1';
                 if baudrate + 100_000 > 1_000_000 then
                     baudrate <= 100_000; -- loop back
                 else
                     baudrate <= baudrate + 100_000;
                 end if;
+			else
+				baud_change <= '0';
             end if;
         end if;
     end process;

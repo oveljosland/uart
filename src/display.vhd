@@ -11,6 +11,8 @@ entity display is
 		rst: in std_logic;
 		char: in std_logic_vector(BITWIDTH - 1 downto 0);
 		fifo_empty: in std_logic;
+		baud_change: in std_logic;
+		baud_rate: in positive range 100_000 to 1_000_000;
 		seg0, seg1, seg2, seg3, seg4, seg5: out std_logic_vector(6 downto 0);
 		read_fifo: out std_logic := '0'
 	);
@@ -66,11 +68,13 @@ begin
 			seg1 <= (others => '1');
 			seg2 <= (others => '1');
 			seg3 <= (others => '1');
-			seg4 <= (others => '1');
-			seg5 <= (others => '1');
+			seg4 <= char_to_sevenseg(std_logic_vector(to_unsigned(baud_rate / 1000000, 8)));
+			seg5 <= char_to_sevenseg(std_logic_vector(to_unsigned((baud_rate / 10000000), 8)));
 			read_fifo <= '0';
 		elsif rising_edge(clk) then
-			if fifo_empty = '0' then -- if fifo not empty add character and shift
+			if baud_change = '1' then
+				-- display baud rate on seg5..seg0
+			elsif fifo_empty = '0' then -- if fifo not empty add character and shift
 				read_fifo <= '1';
 				seg0 <= char_to_sevenseg(char);
 				seg1 <= seg0;
